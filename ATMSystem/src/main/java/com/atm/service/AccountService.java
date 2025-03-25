@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class AccountService {
@@ -49,5 +50,14 @@ public class AccountService {
         } else {
             throw new RuntimeException("Account not found");
         }
+    }
+    // Thêm phương thức lấy tất cả tài khoản
+    public List<Account> getAllAccounts() {
+        return accountRepository.findAll();
+    }
+
+    // Thêm phương thức lấy tài khoản theo số tài khoản (trả về Optional)
+    public Optional<Account> getAccountByAccountNumber(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber);
     }
 }

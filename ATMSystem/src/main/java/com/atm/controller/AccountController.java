@@ -40,6 +40,19 @@ public class AccountController {
         accountService.updateAccountInfo(account.getAccountNumber(), account.getEmail(), account.getPhoneNumber());
         return ResponseEntity.ok("Account updated successfully");
     }
+
+    @GetMapping
+    public ResponseEntity<?> getAllAccounts() {
+        return ResponseEntity.ok(accountService.getAllAccounts());
+    }
+
+    // Lấy thông tin tài khoản theo số tài khoản
+    @GetMapping("/{accountNumber}")
+    public ResponseEntity<?> getAccountByNumber(@PathVariable String accountNumber) {
+        Optional<Account> account = accountService.getAccountByAccountNumber(accountNumber);
+        return account.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @GetMapping("/{accountNumber}/balance")
     public ResponseEntity<Double> getBalance(@PathVariable String accountNumber) {
         try {

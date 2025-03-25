@@ -1,5 +1,6 @@
 package com.atm.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 
 @Entity // Đánh dấu lớp này là một thực thể JPA
@@ -10,15 +11,20 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Tạo ID tự động tăng
     private Long id;
 
-    @Column(unique = true, nullable = false) // Đảm bảo số tài khoản là duy nhất và không null
+    @Column(unique = true, nullable = false, length = 12) // Giới hạn số tài khoản 12 ký tự
     private String accountNumber;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 6) // Giới hạn PIN 6 ký tự
     private String pin;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "#,##0.00")
     private double balance;
     private String email;
+
+    @Column(length = 10)
     private String phoneNumber;
+
+    @Column(length = 255)
     private String address;
 
     // Constructor mặc định

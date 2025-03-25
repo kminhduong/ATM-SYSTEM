@@ -2,8 +2,10 @@ package com.atm.service;
 
 import com.atm.model.Transaction;
 import com.atm.model.Account;
+import com.atm.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.atm.model.TransactionType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,61 +15,45 @@ import java.util.stream.Collectors;
 public class TransactionService {
 
     private final AccountService accountService;
+    private final AccountRepository accountRepository;  // Thêm repository để lưu cập nhật
     private List<Transaction> transactions = new ArrayList<>();
 
     @Autowired
-    public TransactionService(AccountService accountService) {
+    public TransactionService(AccountService accountService, AccountRepository accountRepository) {
         this.accountService = accountService;
+        this.accountRepository = accountRepository;
     }
 
-    // Phương thức xác thực OTP
     public boolean validateOtp(String accountNumber, String phoneNumber, String otp) {
-        // Đây chỉ là một ví dụ về cách kiểm tra OTP.
-        // Cần thay đổi với logic xác thực OTP thực tế (ví dụ như kiểm tra OTP trong cơ sở dữ liệu hoặc qua một dịch vụ OTP).
         return "123456".equals(otp);  // Giả sử OTP đúng là "123456"
     }
 
     public boolean withdraw(String accountNumber, String pin, double amount) {
-        // Lấy tài khoản từ AccountService
         Account account = accountService.getAccount(accountNumber);
-        if (account == null) {
-            return false;  // Account does not exist.
-        }
-
-        // Kiểm tra mã PIN hợp lệ
-        if (!account.getPin().equals(pin)) {
-            return false;  // Invalid PIN.
-        }
-
-        // Kiểm tra số dư tài khoản
-        if (amount > account.getBalance()) {
-            return false;  // Insufficient balance.
+        if (account == null || !account.getPin().equals(pin) || amount > account.getBalance()) {
+            return false;
         }
 
         // Thực hiện giao dịch rút tiền
         account.setBalance(account.getBalance() - amount);
-        transactions.add(new Transaction(accountNumber, amount, "withdrawal"));
-        return true;  // Giao dịch thành công
+        accountRepository.save(account);  // Lưu thay đổi vào database
+        transactions.add(new Transaction(accountNumber, amount, TransactionType.WITHDRAWAL));
+        return true;
     }
 
     public boolean withdrawWithOtp(String accountNumber, String phoneNumber, double amount) {
         Account account = accountService.getAccount(accountNumber);
-
-        if (account == null) {
-            return false;  // Account does not exist.
+        if (account == null || amount > account.getBalance()) {
+            return false;
         }
 
-        if (amount > account.getBalance()) {
-            return false;  // Insufficient balance.
-        }
-
-        // Thực hiện rút tiền sau khi OTP hợp lệ
+        // Thực hiện giao dịch rút tiền
         account.setBalance(account.getBalance() - amount);
-        transactions.add(new Transaction(accountNumber, amount, "withdrawal (OTP)"));
+        accountRepository.save(account);  // Lưu thay đổi vào database
+        transactions.add(new Transaction(accountNumber, amount, TransactionType.WITHDRAWAL));
         return true;
     }
 
-    // Lấy lịch sử giao dịch theo số tài khoản
     public List<Transaction> getTransactionHistory(String accountNumber) {
         return transactions.stream()
                 .filter(t -> t.getAccountNumber().equals(accountNumber))

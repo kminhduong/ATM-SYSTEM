@@ -11,6 +11,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transactions")
+@CrossOrigin(origins = "*") // Cho phép truy cập từ mọi nguồn
 public class TransactionController {
 
     @Autowired

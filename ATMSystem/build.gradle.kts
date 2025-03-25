@@ -13,17 +13,19 @@ repositories {
 }
 
 dependencies {
-    implementation("com.h2database:h2")
+//    implementation("com.h2database:h2")
+    // Thêm MySQL Connector
+    implementation("com.mysql:mysql-connector-j:8.2.0")
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
-
-    // Thêm DevTools cho phát triển
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
-    // Thư viện test
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    implementation ("com.fasterxml.jackson.core:jackson-databind:2.15.0")
+
 }
 
 tasks.test {
