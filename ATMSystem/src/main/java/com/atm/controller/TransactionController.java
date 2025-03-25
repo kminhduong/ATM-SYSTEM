@@ -6,13 +6,13 @@ import com.atm.service.TransactionService;
 import java.util.List;
 
 public class TransactionController {
-    private TransactionService transactionService = new TransactionService();
+    private TransactionService transactionService;
+
+    public TransactionController(TransactionService transactionService) {
+        this.transactionService = transactionService;
+    }
 
     public void withdraw(String accountNumber, double amount) {
         transactionService.withdraw(accountNumber, amount);
-    }
-
-    public List<Transaction> getTransactionHistory(String accountNumber) {
-        return transactionService.getTransactionHistory(accountNumber);
     }
 }

@@ -36,4 +36,13 @@ public class AccountService {
             System.out.println("Không tìm thấy tài khoản.");
         }
     }
+    // Thêm tài khoản mới
+    public void addAccount(Account account) {
+        accounts.put(account.getAccountNumber(), account);
+    }
+
+    // Lấy thông tin tài khoản theo số tài khoản
+    public Account getAccount(String accountNumber) {
+        return accounts.get(accountNumber);
+    }
 }

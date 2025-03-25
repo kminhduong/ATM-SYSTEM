@@ -4,8 +4,11 @@ import com.atm.model.Account;
 import com.atm.service.AccountService;
 
 public class AccountController {
-    private AccountService accountService = new AccountService();
+    private AccountService accountService;
 
+    public AccountController(AccountService accountService) {
+        this.accountService = accountService;
+    }
     public void register(Account account) {
         accountService.registerAccount(account);
     }

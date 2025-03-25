@@ -3,13 +3,25 @@ package com.atm;
 import com.atm.controller.AccountController;
 import com.atm.controller.TransactionController;
 import com.atm.model.Account;
+import com.atm.service.AccountService;
+import com.atm.service.TransactionService;
 
 public class Main {
     public static void main(String[] args) {
 
 //        System.out.println("Hello, World!");
-        AccountController accountController = new AccountController();
-        TransactionController transactionController = new TransactionController();
+
+// Tạo AccountService
+        AccountService accountService = new AccountService();
+
+// Tạo TransactionService và truyền AccountService vào
+        TransactionService transactionService = new TransactionService(accountService);
+
+// Tạo AccountController
+        AccountController accountController = new AccountController(accountService);
+
+// Tạo TransactionController
+        TransactionController transactionController = new TransactionController(transactionService);
 
         // Đăng ký tài khoản mới
         Account newAccount = new Account();
@@ -23,23 +35,23 @@ public class Main {
         // Đăng nhập
         Account loggedInAccount = accountController.login("123456789", "1234");
         if (loggedInAccount != null) {
-            System.out.println("Đăng nhập thành công!");
+            System.out.println("Login successful!");
 
             // Kiểm tra số dư
-            System.out.println("Số dư tài khoản: " + loggedInAccount.getBalance());
+            System.out.println("Account balance: " + loggedInAccount.getBalance());
 
             // Rút tiền
             transactionController.withdraw(loggedInAccount.getAccountNumber(), 200.0);
-            System.out.println("Rút tiền thành công!");
+            System.out.println("Withdrawal successful!");
 
             // Kiểm tra số dư sau khi rút
-            System.out.println("Số dư tài khoản sau khi rút: " + loggedInAccount.getBalance());
+            System.out.println("Account balance after withdrawal: " + loggedInAccount.getBalance());
 
             // Xem lịch sử giao dịch
             // List<Transaction> history = transactionController.getTransactionHistory(loggedInAccount.getAccountNumber());
             // history.forEach(transaction -> System.out.println(transaction));
         } else {
-            System.out.println("Đăng nhập thất bại!");
+            System.out.println("Login failed!");
         }
     }
 }
