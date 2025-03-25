@@ -1,48 +1,53 @@
 package com.atm.service;
 
 import com.atm.model.Account;
+import com.atm.repository.AccountRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
+@Service
 public class AccountService {
-    private Map<String, Account> accounts = new HashMap<>();
+    private final AccountRepository accountRepository;
 
-    public void registerAccount(Account account) {
-        accounts.put(account.getAccountNumber(), account);
+    @Autowired
+    public AccountService(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
+    }
+
+    public Account registerAccount(Account account) {
+        Optional<Account> existingAccount = accountRepository.findByAccountNumber(account.getAccountNumber());
+        if (existingAccount.isPresent()) {
+            throw new RuntimeException("Account number already exists"); // Báo lỗi nếu tài khoản đã tồn tại
+        }
+        return accountRepository.save(account); // Lưu tài khoản mới nếu chưa tồn tại
     }
 
     public Account login(String accountNumber, String pin) {
-        Account account = accounts.get(accountNumber);
-        if (account != null && account.getPin().equals(pin)) {
-            return account;
-        }
-        return null;
+        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
+        return accountOpt.filter(account -> account.getPin().equals(pin)).orElse(null);
     }
 
     public void updateAccountInfo(String accountNumber, String email, String phoneNumber) {
-        Account account = accounts.get(accountNumber);
-        if (account != null) {
+        Optional<Account> optionalAccount = accountRepository.findByAccountNumber(accountNumber);
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
             account.setEmail(email);
             account.setPhoneNumber(phoneNumber);
+            accountRepository.save(account);
         }
-    }
-    public void updateAddress(String accountNumber, String newAddress) {
-        Account account = accounts.get(accountNumber);
-        if (account != null) {
-            account.setAddress(newAddress);
-            System.out.println("Cập nhật địa chỉ thành công.");
-        } else {
-            System.out.println("Không tìm thấy tài khoản.");
-        }
-    }
-    // Thêm tài khoản mới
-    public void addAccount(Account account) {
-        accounts.put(account.getAccountNumber(), account);
     }
 
-    // Lấy thông tin tài khoản theo số tài khoản
     public Account getAccount(String accountNumber) {
-        return accounts.get(accountNumber);
+        return accountRepository.findByAccountNumber(accountNumber).orElse(null);
+    }
+    public Double getBalance(String accountNumber) {
+        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
+        if (accountOpt.isPresent()) {
+            return accountOpt.get().getBalance();
+        } else {
+            throw new RuntimeException("Account not found");
+        }
     }
 }

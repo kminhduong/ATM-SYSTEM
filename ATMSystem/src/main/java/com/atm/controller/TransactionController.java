@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -15,14 +16,49 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    // Rút tiền
     @PostMapping("/withdraw")
-    public ResponseEntity<String> withdraw(@RequestParam String accountNumber, @RequestParam double amount) {
-        transactionService.withdraw(accountNumber, amount);
-        return ResponseEntity.ok("Withdrawal successful");
+    public ResponseEntity<String> withdraw(@RequestBody Map<String, Object> payload) {
+        String accountNumber = (String) payload.get("accountNumber");
+        String pin = (String) payload.get("pin");
+        double amount = ((Number) payload.get("amount")).doubleValue();
+
+        if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Invalid withdrawal amount.");
+        }
+
+        boolean success = transactionService.withdraw(accountNumber, pin, amount);
+        if (success) {
+            return ResponseEntity.ok("Withdrawal successful");
+        } else {
+            return ResponseEntity.badRequest().body("Insufficient balance or invalid PIN.");
+        }
     }
 
-    // Xem lịch sử giao dịch
+    @PostMapping("/withdraw/otp")
+    public ResponseEntity<String> withdrawWithOtp(@RequestBody Map<String, Object> payload) {
+        String accountNumber = (String) payload.get("accountNumber");
+        String phoneNumber = (String) payload.get("phoneNumber");
+        double amount = ((Number) payload.get("amount")).doubleValue();
+        String otp = (String) payload.get("otp");
+
+        if (amount <= 0) {
+            return ResponseEntity.badRequest().body("Invalid withdrawal amount.");
+        }
+
+        // Kiểm tra OTP hợp lệ trước khi rút tiền
+        boolean otpValid = transactionService.validateOtp(accountNumber, phoneNumber, otp);
+        if (!otpValid) {
+            return ResponseEntity.badRequest().body("Invalid OTP.");
+        }
+
+        boolean success = transactionService.withdrawWithOtp(accountNumber, phoneNumber, amount);
+        if (success) {
+            return ResponseEntity.ok("Withdrawal successful with OTP");
+        } else {
+            return ResponseEntity.badRequest().body("Insufficient balance or invalid account/phone number.");
+        }
+    }
+
     @GetMapping("/{accountNumber}")
     public ResponseEntity<List<Transaction>> getTransactionHistory(@PathVariable String accountNumber) {
         List<Transaction> transactions = transactionService.getTransactionHistory(accountNumber);

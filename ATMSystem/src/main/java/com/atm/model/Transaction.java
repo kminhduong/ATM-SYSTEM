@@ -1,10 +1,17 @@
 package com.atm.model;
 
+import jakarta.persistence.*;
 import java.util.Date;
-// Tạo tự động id
 import java.util.UUID;
 
+@Entity // Đánh dấu lớp này là một thực thể JPA
+@Table(name = "transactions") // Tên bảng trong cơ sở dữ liệu
 public class Transaction {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Tạo ID tự động tăng
+    private Long id;
+
     private String transactionId;
     private String accountNumber;
     private double amount;
@@ -12,49 +19,32 @@ public class Transaction {
     private String type; // "withdrawal" hoặc "deposit"
 
     // Constructor
-    public Transaction(String accountNumber, double amount, String type) {
+    public Transaction() {
         this.transactionId = UUID.randomUUID().toString(); // Tạo ID ngẫu nhiên
-        this.accountNumber = accountNumber;
-        this.amount = amount;
         this.date = new Date(); // Thời gian giao dịch hiện tại
-        this.type = type;
     }
 
-    // Getters
-    public String getTransactionId() {
-        return transactionId;
-    }
-
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public double getAmount() {
-        return amount;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    // Setters (nếu cần)
-    public void setAccountNumber(String accountNumber) {
+    public Transaction(String accountNumber, double amount, String type) {
+        this();
         this.accountNumber = accountNumber;
-    }
-
-    public void setAmount(double amount) {
         this.amount = amount;
-    }
-
-    public void setType(String type) {
         this.type = type;
     }
 
-    // Hiển thị thông tin giao dịch
+    // Getters và Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getTransactionId() { return transactionId; }
+    public String getAccountNumber() { return accountNumber; }
+    public double getAmount() { return amount; }
+    public Date getDate() { return date; }
+    public String getType() { return type; }
+
+    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
+    public void setAmount(double amount) { this.amount = amount; }
+    public void setType(String type) { this.type = type; }
+
     @Override
     public String toString() {
         return "Transaction{" +

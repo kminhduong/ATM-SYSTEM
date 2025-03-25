@@ -2,7 +2,7 @@ package com.atm.controller;
 
 import com.atm.model.Account;
 import com.atm.service.AccountService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,32 +10,43 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/accounts")
+@CrossOrigin(origins = "*") // Nếu cần kết nối với frontend
 public class AccountController {
 
-    @Autowired
-    private AccountService accountService;
+    private final AccountService accountService;
 
-    // Đăng ký tài khoản
+    public AccountController(AccountService accountService) {
+        this.accountService = accountService;
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<Account> register(@RequestBody Account account) {
-        accountService.registerAccount(account);
-        return ResponseEntity.ok(account);
+    public ResponseEntity<Account> register(@Valid @RequestBody Account account) {
+        Account createdAccount = accountService.registerAccount(account); // Gọi phương thức trả về Account
+        return ResponseEntity.ok(createdAccount); // Trả về đối tượng Account đã được tạo
     }
 
-    // Đăng nhập
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestParam String accountNumber, @RequestParam String pin) {
-        Optional<Account> account = Optional.ofNullable(accountService.login(accountNumber, pin));
-        return account.isPresent() ? ResponseEntity.ok("Login successful") : ResponseEntity.status(401).body("Invalid credentials");
+    public ResponseEntity<String> login(@RequestBody Account loginRequest) {
+        Account account = accountService.login(loginRequest.getAccountNumber(), loginRequest.getPin());
+        if (account != null) {
+            return ResponseEntity.ok("Login successful");
+        } else {
+            return ResponseEntity.status(401).body("Invalid credentials");
+        }
     }
 
-    // Cập nhật thông tin tài khoản
     @PutMapping("/update")
-    public ResponseEntity<String> updateAccountInfo(
-            @RequestParam String accountNumber,
-            @RequestParam String email,
-            @RequestParam String phoneNumber) {
-        accountService.updateAccountInfo(accountNumber, email, phoneNumber);
+    public ResponseEntity<String> updateAccountInfo(@Valid @RequestBody Account account) {
+        accountService.updateAccountInfo(account.getAccountNumber(), account.getEmail(), account.getPhoneNumber());
         return ResponseEntity.ok("Account updated successfully");
+    }
+    @GetMapping("/{accountNumber}/balance")
+    public ResponseEntity<Double> getBalance(@PathVariable String accountNumber) {
+        try {
+            Double balance = accountService.getBalance(accountNumber);
+            return ResponseEntity.ok(balance);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

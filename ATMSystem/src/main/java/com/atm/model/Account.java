@@ -1,18 +1,31 @@
 package com.atm.model;
 
+import jakarta.persistence.*;
+
+@Entity // Đánh dấu lớp này là một thực thể JPA
+@Table(name = "accounts") // Tên bảng trong cơ sở dữ liệu
 public class Account {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // Tạo ID tự động tăng
+    private Long id;
+
+    @Column(unique = true, nullable = false) // Đảm bảo số tài khoản là duy nhất và không null
     private String accountNumber;
+
+    @Column(nullable = false)
     private String pin;
+
     private double balance;
     private String email;
     private String phoneNumber;
-    private String address; // Thêm thuộc tính địa chỉ
+    private String address;
 
-    // Constructor không tham số (mặc định)
+    // Constructor mặc định
     public Account() {}
 
-    // Constructor: khởi tạo tài khoản.
-    public Account(String accountNumber, String pin, double balance, String email, String phoneNumber) {
+    // Constructor đầy đủ
+    public Account(String accountNumber, String pin, double balance, String email, String phoneNumber, String address) {
         this.accountNumber = accountNumber;
         this.pin = pin;
         this.balance = balance;
@@ -21,89 +34,37 @@ public class Account {
         this.address = address;
     }
 
-    // Getters
-    public String getAccountNumber() {
-        return accountNumber;
-    }
+    // Getters & Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getPin() {
-        return pin;
-    }
+    public String getAccountNumber() { return accountNumber; }
+    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
 
-    public double getBalance() {
-        return balance;
-    }
+    public String getPin() { return pin; }
+    public void setPin(String pin) { this.pin = pin; }
 
-    public String getEmail() {
-        return email;
-    }
+    public double getBalance() { return balance; }
+    public void setBalance(double balance) { this.balance = balance; }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-    public String getAddress() {
-        return address;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    // Setters
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
-    }
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
 
-    public void setPin(String pin) {
-        this.pin = pin;
-    }
-    public void setBalance(double balance) {
-        this.balance = balance;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-    public void setAddress(String address) {
-        this.address = address;
-    }
     @Override
     public String toString() {
         return "Account{" +
-                "accountNumber='" + accountNumber + '\'' +
+                "id=" + id +
+                ", accountNumber='" + accountNumber + '\'' +
                 ", balance=" + balance +
                 ", email='" + email + '\'' +
                 ", phoneNumber='" + phoneNumber + '\'' +
+                ", address='" + address + '\'' +
                 '}';
-    }
-
-    // Deposit method: nạp tiền vào tài khoản.
-    public void deposit(double amount) {
-        if (amount > 0) {
-            this.balance += amount;
-            System.out.println("Deposited: $" + amount);
-        } else {
-            System.out.println("Deposit amount must be greater than zero.");
-        }
-    }
-
-    // Withdraw method: rút tiền (chỉ khi số dư đủ).
-    public boolean withdraw(double amount) {
-        if (amount > 0 && amount <= balance) {
-            this.balance -= amount;
-            System.out.println("Withdrawn: $" + amount);
-            return true;
-        } else {
-            System.out.println("Insufficient balance or invalid amount.");
-            return false;
-        }
-    }
-
-    // Display account details: hiển thị thông tin tài khoản.
-    public void displayAccountInfo() {
-        System.out.println("Account Number: " + accountNumber);
-        System.out.println("Balance: $" + balance);
-        System.out.println("Email: " + email);
-        System.out.println("Phone Number: " + phoneNumber);
     }
 }
