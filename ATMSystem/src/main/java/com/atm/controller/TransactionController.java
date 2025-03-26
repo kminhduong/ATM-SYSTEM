@@ -1,6 +1,7 @@
 package com.atm.controller;
 
 import com.atm.model.Transaction;
+import com.atm.model.TransactionType; // Thêm import này
 import com.atm.service.TransactionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,8 @@ public class TransactionController {
             return ResponseEntity.badRequest().body("Invalid withdrawal amount.");
         }
 
-        boolean success = transactionService.withdraw(accountNumber, pin, amount);
+        // Gọi phương thức rút tiền thông thường với loại giao dịch là WITHDRAWAL
+        boolean success = transactionService.withdraw(accountNumber, pin, amount, TransactionType.WITHDRAWAL);
         if (success) {
             return ResponseEntity.ok("Withdrawal successful");
         } else {
@@ -52,7 +54,8 @@ public class TransactionController {
             return ResponseEntity.badRequest().body("Invalid OTP.");
         }
 
-        boolean success = transactionService.withdrawWithOtp(accountNumber, phoneNumber, amount);
+        // Gọi phương thức rút tiền với OTP, loại giao dịch là WITHDRAWAL_OTP
+        boolean success = transactionService.withdrawWithOtp(accountNumber, phoneNumber, amount, TransactionType.WITHDRAWAL_OTP);
         if (success) {
             return ResponseEntity.ok("Withdrawal successful with OTP");
         } else {

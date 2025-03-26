@@ -1,6 +1,7 @@
 package com.atm.model;
 
 public enum TransactionType {
-    WITHDRAWAL,
-    DEPOSIT
+    WITHDRAWAL,       // Rút tiền thông thường
+    DEPOSIT,          // Nạp tiền
+    WITHDRAWAL_OTP    // Rút tiền bằng OTP
 }
