@@ -1,65 +1,112 @@
 package com.atm.controller;
 
+import com.atm.dto.AccountDTO;
+import com.atm.dto.LoginRequest;
 import com.atm.model.Account;
 import com.atm.service.AccountService;
-import jakarta.validation.Valid;
+import com.atm.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/accounts")
-@CrossOrigin(origins = "*") // Nếu cần kết nối với frontend
+@RequestMapping("/accounts")
 public class AccountController {
 
     private final AccountService accountService;
 
+    @Autowired
     public AccountController(AccountService accountService) {
         this.accountService = accountService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<Account> register(@Valid @RequestBody Account account) {
-        Account createdAccount = accountService.registerAccount(account); // Gọi phương thức trả về Account
-        return ResponseEntity.ok(createdAccount); // Trả về đối tượng Account đã được tạo
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Account loginRequest) {
-        Account account = accountService.login(loginRequest.getAccountNumber(), loginRequest.getPin());
-        if (account != null) {
-            return ResponseEntity.ok("Login successful");
-        } else {
-            return ResponseEntity.status(401).body("Invalid credentials");
+    // Đăng ký tài khoản mới (tự động tạo user nếu chưa có)
+    @PostMapping("/register")
+    public ResponseEntity<String> register(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody AccountDTO accountDTO) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Bạn cần đăng nhập trước!");
+        }
+
+        String token = authHeader.substring(7);
+        String accountNumber = jwtUtil.validateToken(token);
+
+        if (accountNumber == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token không hợp lệ!");
+        }
+
+        // Kiểm tra vai trò
+        String role = jwtUtil.extractRole(token);
+        if (!"ADMIN".equals(role)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Bạn không có quyền thực hiện hành động này!");
+        }
+
+        try {
+            String userId = accountDTO.getUserId();
+
+            if (!accountService.isUserExists(userId)) {
+                userId = accountService.createUser(accountDTO.getFullName());
+            }
+
+            accountDTO.setUserId(userId);
+            accountService.register(accountDTO.toAccount());
+
+            return ResponseEntity.ok("Tài khoản đã được đăng ký thành công!");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @PutMapping("/update")
-    public ResponseEntity<String> updateAccountInfo(@Valid @RequestBody Account account) {
-        accountService.updateAccountInfo(account.getAccountNumber(), account.getEmail(), account.getPhoneNumber());
-        return ResponseEntity.ok("Account updated successfully");
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> payload) {
+        String accountNumber = payload.get("accountNumber");
+        String password = payload.get("password");
+
+        if (accountService.authenticate(accountNumber, password)) {
+            // Giả sử bạn có thể lấy vai trò từ cơ sở dữ liệu hoặc có sẵn giá trị vai trò
+            String role = "USER"; // Hoặc "ADMIN" nếu tài khoản là admin
+
+            // Tạo token JWT sau khi xác thực thành công
+            String token = jwtUtil.generateToken(accountNumber, role);
+
+            // Trả về phản hồi chứa token
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Đăng nhập thành công!");
+            response.put("token", token);
+
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Sai tài khoản hoặc mật khẩu."));
+        }
     }
 
-    @GetMapping
-    public ResponseEntity<?> getAllAccounts() {
-        return ResponseEntity.ok(accountService.getAllAccounts());
-    }
+    // Xem toàn bộ khách hàng (dành cho nhân viên ngân hàng)
+    @GetMapping("/customers")
+    public ResponseEntity<List<AccountDTO>> getAllCustomers(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
 
-    // Lấy thông tin tài khoản theo số tài khoản
-    @GetMapping("/{accountNumber}")
-    public ResponseEntity<?> getAccountByNumber(@PathVariable String accountNumber) {
-        Optional<Account> account = accountService.getAccountByAccountNumber(accountNumber);
-        return account.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
+        String token = authHeader.substring(7); // Loại bỏ tiền tố "Bearer "
+        String accountNumber = jwtUtil.validateToken(token);
 
-    @GetMapping("/{accountNumber}/balance")
-    public ResponseEntity<Double> getBalance(@PathVariable String accountNumber) {
-        try {
-            Double balance = accountService.getBalance(accountNumber);
-            return ResponseEntity.ok(balance);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+        if (accountNumber != null) {
+            List<AccountDTO> customers = accountService.getAllCustomers().stream()
+                    .map(AccountDTO::fromAccount)
+                    .toList();
+            return ResponseEntity.ok(customers);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
 }

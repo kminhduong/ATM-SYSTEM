@@ -1,69 +1,126 @@
 package com.atm.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import java.util.Date;
-import java.util.UUID;
 
-@Entity // Đánh dấu lớp này là một thực thể JPA
-@Table(name = "transactions") // Tên bảng trong cơ sở dữ liệu
+@Entity
+@Table(name = "Transaction") // Đúng với tên bảng trong MySQL
 public class Transaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Tạo ID tự động tăng
-    private Long id;
-
+    @Column(name = "transaction_id", length = 50)
     private String transactionId;
 
-    @Column(nullable = false, length = 12)
+    @Column(name = "atm_id", length = 50, nullable = false)
+    private String atmId;
+
+    @Column(name = "account_number", length = 50, nullable = false)
     private String accountNumber;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "#,##0.00")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    private TransactionType type;
+
+    @Column(name = "amount", nullable = false)
     private double amount;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date date;
+    @Column(name = "create_at", nullable = false)
+    private Date createAt;
 
-    @Enumerated(EnumType.STRING)
-    private TransactionType type;  // Dùng Enum để tránh sai loại giao dịch
-//    private String type; // "withdrawal" hoặc "deposit"
+    // ✅ No-arg constructor (bắt buộc cho Hibernate)
+    public Transaction() {}
 
-    // Constructor
-    public Transaction() {
-        this.transactionId = UUID.randomUUID().toString(); // Tạo ID ngẫu nhiên
-        this.date = new Date(); // Thời gian giao dịch hiện tại
+    // ✅ Constructor đầy đủ
+    public Transaction(String transactionId, String atmId, String accountNumber, String type, double amount) {
+        this.transactionId = transactionId;
+        this.atmId = atmId;
+        this.accountNumber = accountNumber;
+        setType(type);
+        setAmount(amount);
+        this.createAt = new Date();  // Tạo thời gian hiện tại khi khởi tạo
     }
 
-    public Transaction(String accountNumber, double amount, TransactionType type) {
-        this();
+    // ✅ Constructor theo yêu cầu (accountNumber, amount, type, createAt)
+    public Transaction(String accountNumber, double amount, TransactionType type, Date createAt) {
+        this.transactionId = java.util.UUID.randomUUID().toString(); // Tạo ID ngẫu nhiên
+        this.atmId = "ATM001"; // Có thể thay đổi nếu cần
         this.accountNumber = accountNumber;
         this.amount = amount;
         this.type = type;
+        this.createAt = createAt != null ? createAt : new Date();
     }
 
-    // Getters và Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // ✅ Getters và Setters
+    public String getTransactionId() {
+        return transactionId;
+    }
 
-    public String getTransactionId() { return transactionId; }
-    public String getAccountNumber() { return accountNumber; }
-    public double getAmount() { return amount; }
-    public Date getDate() { return date; }
-    public TransactionType getType() { return type; }
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
 
-    public void setAccountNumber(String accountNumber) { this.accountNumber = accountNumber; }
-    public void setAmount(double amount) { this.amount = amount; }
-    public void setType(TransactionType type) { this.type = type; }
+    public String getAtmId() {
+        return atmId;
+    }
+
+    public void setAtmId(String atmId) {
+        this.atmId = atmId;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    public TransactionType getType() {
+        return type;
+    }
+
+    // ✅ Ràng buộc cho type
+    public void setType(String type) {
+        for (TransactionType t : TransactionType.values()) {
+            if (t.name().equalsIgnoreCase(type)) {
+                this.type = t;
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Invalid transaction type: " + type);
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    // ✅ Ràng buộc cho amount (phải > 0)
+    public void setAmount(double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than 0");
+        }
+        this.amount = amount;
+    }
+
+    // ✅ Getter cho createAt (không cho phép chỉnh sửa trực tiếp)
+    public Date getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
+    }
 
     @Override
     public String toString() {
         return "Transaction{" +
                 "transactionId='" + transactionId + '\'' +
+                ", atmId='" + atmId + '\'' +
                 ", accountNumber='" + accountNumber + '\'' +
+                ", type=" + type +
                 ", amount=" + amount +
-                ", date=" + date +
-                ", type='" + type + '\'' +
+                ", createAt=" + createAt +
                 '}';
     }
 }
