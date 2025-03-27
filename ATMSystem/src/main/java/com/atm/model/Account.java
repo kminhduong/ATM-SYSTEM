@@ -39,6 +39,7 @@ public class Account {
 
     @Column(name = "pin", length = 6, nullable = false)
     private String pin;
+    @Column(nullable = false)
     private String role;
     private String phoneNumber;
 

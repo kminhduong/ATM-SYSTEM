@@ -22,15 +22,30 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+//    public String generateToken(String accountNumber, String role, long expirationTime) {
+//        return Jwts.builder()
+//                .setSubject(accountNumber)
+//                .claim("role", role)
+//                .setIssuedAt(new Date())
+//                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+//                .signWith(getSecretKey(), SignatureAlgorithm.HS256)
+//                .compact();
+//    }
     public String generateToken(String accountNumber, String role, long expirationTime) {
-        return Jwts.builder()
+        System.out.println("🔍 Role từ DB trước khi tạo JWT: " + role);
+
+        String token = Jwts.builder()
                 .setSubject(accountNumber)
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
+
+        System.out.println("🔐 Token đã tạo: " + token);
+        return token;
     }
+
 
     public String validateToken(String token) {
         try {
@@ -66,6 +81,10 @@ public class JwtUtil {
     }
 
     public String getRoleFromToken(String token) {
-        return extractClaim(token, claims -> claims.get("role", String.class));
+        Claims claims = extractAllClaims(token);
+        Object roleObj = claims.get("role");
+        String role = (roleObj != null) ? roleObj.toString() : null;
+        System.out.println("🔍 Vai trò lấy từ JWT (fix): " + role);
+        return role;
     }
 }

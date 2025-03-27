@@ -7,10 +7,13 @@ import com.atm.repository.AccountRepository;
 import com.atm.repository.BalanceRepository;
 import com.atm.repository.CredentialRepository;
 import com.atm.model.Balance;
+import com.atm.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,11 +43,22 @@ public class AccountService {
     }
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     public Account getAccount(String accountNumber) {
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
-        return accountOpt.orElse(null);
+
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
+            logger.info("🔍 Tài khoản tìm thấy: {}, Role: {}", account.getAccountNumber(), account.getRole());
+            return account;
+        }
+
+        logger.warn("⚠ Không tìm thấy tài khoản: {}", accountNumber);
+        return null;
     }
+
 
     // Đăng ký tài khoản mới
     @Transactional
@@ -109,17 +123,46 @@ public class AccountService {
             Account account = optionalAccount.get();
             account.setPin(accountDTO.getPin());
             account.setPhoneNumber(accountDTO.getPhoneNumber());
+            account.setFullName(accountDTO.getFullName());
+            account.setBalance(accountDTO.getBalance());
 
-            accountRepository.save(account);
+//            accountRepository.save(account);
+            accountRepository.updateFullName(accountDTO.getAccountNumber(), accountDTO.getFullName());
+            accountRepository.updatePhoneNumber(accountDTO.getAccountNumber(), accountDTO.getPhoneNumber());
         } else {
             throw new RuntimeException("Tài khoản không tồn tại.");
         }
     }
 
+//    public Double getBalance(String accountNumber) {
+//        return accountRepository.findByAccountNumber(accountNumber)
+//                .map(Account::getBalance)
+//                .orElse(null);
+//    }
     public Double getBalance(String accountNumber) {
+        // Lấy tài khoản đang đăng nhập
+        String loggedInAccountNumber = getLoggedInAccountNumber();
+
+        // Kiểm tra xem tài khoản yêu cầu có phải của người dùng đang đăng nhập hay không
+        if (!accountNumber.equals(loggedInAccountNumber)) {
+            throw new SecurityException("Bạn không có quyền truy cập số dư của tài khoản này.");
+        }
+
         return accountRepository.findByAccountNumber(accountNumber)
                 .map(Account::getBalance)
-                .orElse(null);
+                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại."));
+    }
+
+    // Hàm lấy số tài khoản của người dùng hiện tại
+    public String getLoggedInAccountNumber() {
+        System.out.println("🔍 Kiểm tra SecurityContextHolder: " + SecurityContextHolder.getContext().getAuthentication());
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            System.out.println("❌ SecurityContextHolder is NULL!");
+            return null;
+        }
+
+        return (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
     // Lấy tất cả khách hàng (dành cho nhân viên ngân hàng)
@@ -145,5 +188,28 @@ public class AccountService {
         } else {
             throw new RuntimeException("Failed to create user");
         }
+    }
+    public String authenticateAndGenerateToken(String accountNumber, String password) {
+        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
+
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
+
+            // Kiểm tra mật khẩu đã mã hóa
+            if (passwordEncoder.matches(password, account.getPassword())) {
+                String role = account.getRole(); // Lấy role trực tiếp từ entity
+                logger.info("🔍 Role từ DB khi đăng nhập: {}", role);
+
+                // Tạo JWT với role từ DB
+                return jwtUtil.generateToken(accountNumber, role, 86400000); // Token hết hạn sau 1 ngày
+            } else {
+                throw new IllegalArgumentException("Sai mật khẩu!");
+            }
+        } else {
+            throw new IllegalArgumentException("Tài khoản không tồn tại!");
+        }
+    }
+    public Optional<Account> getAccountByNumberAndPassword(String accountNumber, String password) {
+        return accountRepository.findByAccountNumberAndPassword(accountNumber, password);
     }
 }

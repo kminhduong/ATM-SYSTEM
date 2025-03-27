@@ -11,11 +11,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,16 +107,14 @@ public class AccountController {
         String accountNumber = payload.get("accountNumber");
         String password = payload.get("password");
 
-        if (accountService.authenticate(accountNumber, password)) {
-            String role = "USER"; // Hoặc lấy từ DB nếu cần
+        // Kiểm tra tài khoản từ database
+        Optional<Account> accountOpt = accountService.getAccountByNumberAndPassword(accountNumber, password);
 
-            // Định nghĩa thời gian hết hạn token (ví dụ: 1 ngày)
-            long expirationTime = 24 * 60 * 60 * 1000; // 1 ngày (milliseconds)
+        if (accountOpt.isPresent()) {
+            Account account = accountOpt.get();
+            String role = account.getRole(); // Lấy role từ database
+            String token = jwtUtil.generateToken(account.getAccountNumber(), role, 86400000);
 
-            // Tạo token mới với secret key mới nhất
-            String token = jwtUtil.generateToken(accountNumber, role, expirationTime);
-
-            // Trả về phản hồi chứa token
             Map<String, String> response = new HashMap<>();
             response.put("message", "Đăng nhập thành công!");
             response.put("token", token);
@@ -166,14 +168,36 @@ public class AccountController {
         }
     }
 
-    @GetMapping("/{accountNumber}/balance")
-    public ResponseEntity<?> getBalance(@PathVariable String accountNumber) {
-        Double balance = accountService.getBalance(accountNumber);
-        if (balance == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account not found");
+//    @GetMapping("/{accountNumber}/balance")
+//    public ResponseEntity<?> getBalance(@PathVariable String accountNumber) {
+//        Double balance = accountService.getBalance(accountNumber);
+//        if (balance == null) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Account not found");
+//        }
+//        return ResponseEntity.ok(balance);
+//    }
+
+    @GetMapping("/balance")
+    public ResponseEntity<Double> getBalance() {
+        try {
+            String loggedInAccountNumber = accountService.getLoggedInAccountNumber();
+            System.out.println("🔹 Logged in Account: " + loggedInAccountNumber);
+
+            if (loggedInAccountNumber == null) {
+                System.out.println("❌ Authentication failed! SecurityContextHolder is NULL.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+            }
+
+            Double balance = accountService.getBalance(loggedInAccountNumber);
+            System.out.println("✅ Balance Retrieved: " + balance);
+
+            return ResponseEntity.ok(balance);
+        } catch (SecurityException e) {
+            System.out.println("❌ SecurityException: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
-        return ResponseEntity.ok(balance);
     }
+
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
@@ -190,4 +214,13 @@ public class AccountController {
 
         return ResponseEntity.ok("Đăng xuất thành công!");
     }
+    @GetMapping("/check-role")
+    public ResponseEntity<String> checkRole() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("👤 User: " + authentication.getName());
+        System.out.println("🔐 Authorities: " + authentication.getAuthorities());
+
+        return ResponseEntity.ok("Check console for role details.");
+    }
+
 }

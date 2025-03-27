@@ -3,8 +3,8 @@ POST http://localhost:8080/api/transactions/login
 Content-Type: application/json
 
 {
-  "accountNumber": "0123456789",
-  "pin": "1234"
+  "accountNumber": "0147258369",
+  "pin": "111111"
 }
 
 > {% client.global.set("authToken", response.body.token); %}
@@ -17,8 +17,8 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "accountNumber": "0123456789",
-  "amount": 5
+  "accountNumber": "0147258369",
+  "amount": 50
 }
 
 ###
@@ -37,7 +37,7 @@ Authorization: Bearer {{authToken}}
 ###
 
 ### 📝 Get Transaction History (Lấy lịch sử giao dịch)
-GET http://localhost:8080/api/transactions/0123789456
+GET http://localhost:8080/api/transactions/0147258369
 Authorization: Bearer {{authToken}}
 
 ###

@@ -23,9 +23,14 @@ public class SecurityConfig {
                 .cors(cors -> {}) // Tùy chỉnh CORS theo nhu cầu
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/accounts/register", "/accounts/login", "/api/transactions/login").permitAll()
-                        .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/accounts/update", "/accounts/{accountNumber}/balance").authenticated()
-                        .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/accounts/update").authenticated()
+                        .requestMatchers("/accounts/balance").authenticated()  // Chỉ cho phép người đã đăng nhập
+                        .requestMatchers("/accounts/{accountNumber}").authenticated()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/accounts").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/**").hasRole("ADMIN")  // Cho phép ADMIN truy cập /admin/**
+                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasAuthority("USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Thêm bộ lọc JWT
