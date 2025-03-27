@@ -16,6 +16,7 @@ public class AccountDTO {
     private double balance;
     private String pin;
     private String role;
+    private String phoneNumber;
 
     // Constructor không tham số
     public AccountDTO() {
@@ -38,15 +39,15 @@ public class AccountDTO {
     // Chuyển từ DTO thành Entity
     public Account toAccount() {
         return new Account(
-                this.accountNumber,
-                this.username,
-                this.password,
-                this.fullName,
+                this.accountNumber != null ? this.accountNumber : "Unknown",
+                this.username != null ? this.username : "DefaultUsername",
+                this.password != null ? this.password : "DefaultPassword",
+                this.fullName != null ? this.fullName : "Unknown Name",
                 this.userId,
-                this.accountType,
-                this.status,
-                this.balance,
-                this.pin,
+                this.accountType != null ? this.accountType : AccountType.SAVINGS,
+                this.status != null ? this.status : AccountStatus.ACTIVE,
+                0.0, // Số dư mặc định
+                "000000", // PIN mặc định
                 this.role
         );
     }
@@ -143,5 +144,13 @@ public class AccountDTO {
     }
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 }

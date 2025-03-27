@@ -1,68 +1,71 @@
 package com.atm.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
-import io.jsonwebtoken.security.Keys;
+import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-    private static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60; // 1 giờ
 
-    // Tạo token
-    public String generateToken(String accountNumber, String role) {
+    private final JwtSecretManager jwtSecretManager;
+
+    public JwtUtil(JwtSecretManager jwtSecretManager) {
+        this.jwtSecretManager = jwtSecretManager;
+    }
+
+    private SecretKey getSecretKey() {
+        byte[] keyBytes = java.util.Base64.getDecoder().decode(jwtSecretManager.getSecretKey());
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public String generateToken(String accountNumber, String role, long expirationTime) {
         return Jwts.builder()
                 .setSubject(accountNumber)
-                .claim("role", role)  // Thêm vai trò vào claims
+                .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public String extractRole(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(SECRET_KEY)
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.get("role", String.class);
+    public String validateToken(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return claims.getSubject();
+        } catch (Exception e) {
+            System.out.println("JWT validation failed: " + e.getMessage());
+            return null;
+        }
     }
 
-    // Lấy thông tin từ token
-    public String extractAccountNumber(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(SECRET_KEY)
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.getSubject();
-    }
-
-    // Kiểm tra tính hợp lệ của token
     public boolean isTokenValid(String token) {
         try {
-            Claims claims = Jwts.parser()
-                    .setSigningKey(SECRET_KEY)
-                    .parseClaimsJws(token)
-                    .getBody();
+            Claims claims = extractAllClaims(token);
             return !claims.getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
         }
     }
-    public String validateToken(String token) {
-        try {
-            Claims claims = Jwts.parser()
-                    .setSigningKey(SECRET_KEY)
-                    .parseClaimsJws(token)
-                    .getBody();
-            return claims.getSubject();
-        } catch (Exception e) {
-            return null;
-        }
+
+    // 🔹 Thêm phương thức extractClaim()
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSecretKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public String getRoleFromToken(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 }

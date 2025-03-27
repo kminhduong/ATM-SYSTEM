@@ -4,10 +4,12 @@ import com.atm.model.Account;
 import com.atm.model.Transaction;
 import com.atm.model.TransactionType;
 import com.atm.service.TransactionService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.atm.util.JwtUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -19,85 +21,112 @@ public class TransactionController {
 
     @Autowired
     private TransactionService transactionService;
+    @Autowired
+    private com.atm.util.JwtUtil jwtUtil;
 
     // ThreadLocal để đảm bảo mỗi luồng có một currentUser riêng
-    private static final ThreadLocal<Account> currentUser = new ThreadLocal<>();
+//    private static final ThreadLocal<Account> currentUser = new ThreadLocal<>();
 
     // Lấy user đang đăng nhập trong luồng hiện tại
-    private Account getCurrentUser() {
-        Account user = currentUser.get();
-        if (user == null) {
-            throw new RuntimeException("User not logged in");
-        }
-        return user;
+//    private Account getCurrentUser() {
+//        Account user = currentUser.get();
+//        if (user == null) {
+//            throw new RuntimeException("User not logged in");
+//        }
+//        return user;
+//    }
+    private String getCurrentAccountNumber(String token) {
+        return jwtUtil.validateToken(token); // Trả về accountNumber từ token
     }
 
-    // Đăng nhập
+    // API Đăng nhập
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody Account loginRequest) {
-        String token = transactionService.login(loginRequest.getAccountNumber(), loginRequest.getPin());
+    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginRequest) {
+        String accountNumber = loginRequest.get("accountNumber");
+        String pin = loginRequest.get("pin");
+
+        String token = transactionService.login(accountNumber, pin);
         if (token != null) {
-            return ResponseEntity.ok("Login successful. Token: " + token);
+            Map<String, String> response = Map.of(
+                    "message", "Login successful",
+                    "token", token
+            );
+            return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid credentials: Please check your account number and PIN.");
+                    .body(Map.of("message", "Invalid account number or PIN."));
         }
     }
 
-    // Đăng xuất
-    @GetMapping("/logout")
-    public ResponseEntity<String> logout() {
-        currentUser.remove();
-        return ResponseEntity.ok("Logout successful");
+    // API Đăng xuất
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            transactionService.logout(token);
+            return ResponseEntity.ok("Logout successful. Token invalidated.");
+        }
+
+        return ResponseEntity.badRequest().body("Invalid token.");
     }
 
-    // Rút tiền
     @PostMapping("/withdraw")
-    public ResponseEntity<String> withdraw(@RequestHeader("Authorization") String token, @RequestBody Map<String, Object> payload) {
-        double amount = ((Number) payload.get("amount")).doubleValue();
-        boolean success = transactionService.withdraw(token, amount, TransactionType.WITHDRAWAL);
-        if (success) {
-            return ResponseEntity.ok("Withdrawal successful");
-        } else {
-            return ResponseEntity.badRequest().body("Insufficient balance or invalid token.");
+    public ResponseEntity<String> withdraw(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+
+            // Kiểm tra nếu token đã bị vô hiệu hóa
+            if (transactionService.isTokenBlacklisted(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token has been logged out.");
+            }
+
+            return ResponseEntity.ok("Withdraw successful.");
         }
+
+        return ResponseEntity.badRequest().body("Missing Authorization header.");
     }
 
-    // Rút tiền qua OTP
+    // API Rút tiền qua OTP
     @PostMapping("/withdraw/otp")
-    public ResponseEntity<String> withdrawWithOtp(@RequestBody Map<String, Object> payload) {
-        try {
-            Account user = getCurrentUser();
-            String accountNumber = user.getAccountNumber();
-            String phoneNumber = (String) payload.get("phoneNumber");
-            double amount = ((Number) payload.get("amount")).doubleValue();
-            String otp = (String) payload.get("otp");
+    public ResponseEntity<String> withdrawWithOtp(@RequestHeader("Authorization") String token, @RequestBody Map<String, Object> payload) {
+        String accountNumber = jwtUtil.validateToken(token);
+        String phoneNumber = (String) payload.get("phoneNumber");
+        double amount = ((Number) payload.get("amount")).doubleValue();
+        String otp = (String) payload.get("otp");
 
-            boolean otpValid = transactionService.validateOtp(accountNumber, phoneNumber, otp);
-            if (!otpValid) {
-                return ResponseEntity.badRequest().body("Invalid OTP.");
-            }
+        if (accountNumber == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or expired token.");
+        }
 
-            boolean success = transactionService.withdrawWithOtp(accountNumber, phoneNumber, amount, TransactionType.WITHDRAWAL_OTP);
-            if (success) {
-                return ResponseEntity.ok("Withdrawal successful with OTP");
-            } else {
-                return ResponseEntity.badRequest().body("Insufficient balance or invalid account/phone number.");
-            }
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        if (phoneNumber == null || otp == null) {
+            return ResponseEntity.badRequest().body("Phone number and OTP are required.");
+        }
+
+        boolean otpValid = transactionService.validateOtp(accountNumber, phoneNumber, otp);
+        if (!otpValid) {
+            return ResponseEntity.badRequest().body("Invalid OTP.");
+        }
+
+        boolean success = transactionService.withdrawWithOtp(accountNumber, phoneNumber, amount, TransactionType.WITHDRAWAL_OTP);
+        if (success) {
+            return ResponseEntity.ok("Withdrawal successful with OTP.");
+        } else {
+            return ResponseEntity.badRequest().body("Insufficient balance or ATM funds.");
         }
     }
 
-    // Lấy lịch sử giao dịch
+    // API Lấy lịch sử giao dịch
     @GetMapping("/{accountNumber}")
-    public ResponseEntity<List<Transaction>> getTransactionHistory(@PathVariable String accountNumber) {
-        try {
-            getCurrentUser();  // Kiểm tra đăng nhập
-            List<Transaction> transactions = transactionService.getTransactionHistory(accountNumber);
-            return ResponseEntity.ok(transactions);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(List.of());
+    public ResponseEntity<List<Transaction>> getTransactionHistory(@RequestHeader("Authorization") String token, @PathVariable String accountNumber) {
+        String authenticatedAccountNumber = jwtUtil.validateToken(token);
+
+        if (authenticatedAccountNumber == null || !authenticatedAccountNumber.equals(accountNumber)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
+
+        List<Transaction> transactions = transactionService.getTransactionHistory(accountNumber);
+        return ResponseEntity.ok(transactions);
     }
 }

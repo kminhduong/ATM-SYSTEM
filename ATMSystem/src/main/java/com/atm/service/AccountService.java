@@ -2,7 +2,11 @@ package com.atm.service;
 
 import com.atm.dto.AccountDTO;
 import com.atm.model.Account;
+import com.atm.model.Credential;
 import com.atm.repository.AccountRepository;
+import com.atm.repository.BalanceRepository;
+import com.atm.repository.CredentialRepository;
+import com.atm.model.Balance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +27,10 @@ public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private CredentialRepository credentialRepository;
+    @Autowired
+    private BalanceRepository balanceRepository;
 
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -40,24 +49,45 @@ public class AccountService {
     // Đăng ký tài khoản mới
     @Transactional
     public Account register(Account account) {
-        logger.info("Checking if account exists with account number: " + account.getAccountNumber());
+        logger.info("Received request to register account: {}", account.getAccountNumber());
+
         if (accountRepository.existsById(account.getAccountNumber())) {
+            logger.error("Account already exists: {}", account.getAccountNumber());
             throw new IllegalArgumentException("Tài khoản đã tồn tại!");
         }
 
-        // Kiểm tra userId, nếu chưa có thì tạo mới user
         String userId = account.getUserId();
-        logger.info("Checking userId: " + userId);
+        logger.info("Checking user existence for userId: {}", userId);
+
         if (userId == null || userId.isEmpty() || !isUserExists(userId)) {
-            logger.info("User exists check for userId: " + userId);
+            logger.info("User does not exist, creating new user for fullName: {}", account.getFullName());
             userId = createUser(account.getFullName());
             account.setUserId(userId);
-            logger.info("Created new userId for account: " + userId);
+            logger.info("Created new user with userId: {}", userId);
         }
 
-        // Đăng ký tài khoản mới
-        logger.info("Registering account with account number: " + account.getAccountNumber());
-        return accountRepository.save(account);
+        // Lưu tài khoản vào bảng Account
+        Account savedAccount = accountRepository.save(account);
+
+        // Tạo và lưu thông tin Balance
+        Balance balance = new Balance();
+        balance.setAccountNumber(savedAccount.getAccountNumber());
+        balance.setAvailableBalance(0.0); // Số dư mặc định
+        balance.setLastUpdated(LocalDateTime.now());
+        balanceRepository.save(balance);
+        logger.info("Balance record created for account: {}", savedAccount.getAccountNumber());
+
+        // Tạo thông tin Credential
+        Credential credential = new Credential();
+        credential.setAccountNumber(savedAccount.getAccountNumber());
+        credential.setPin(passwordEncoder.encode("000000")); // Mã hóa PIN mặc định
+        credential.setFailedAttempts(0);
+        credential.setLockTime(null);
+        credential.setUpdateAt(LocalDateTime.now());
+        credentialRepository.save(credential);
+
+        logger.info("Successfully registered account: {}", savedAccount.getAccountNumber());
+        return savedAccount;
     }
 
     // Đăng nhập (Authenticate)
@@ -69,6 +99,27 @@ public class AccountService {
             return password.equals(account.get().getPassword());
         }
         return false;
+    }
+
+    @Transactional
+    public void updateAccount(AccountDTO accountDTO) {
+        Optional<Account> optionalAccount = accountRepository.findById(accountDTO.getAccountNumber());
+
+        if (optionalAccount.isPresent()) {
+            Account account = optionalAccount.get();
+            account.setPin(accountDTO.getPin());
+            account.setPhoneNumber(accountDTO.getPhoneNumber());
+
+            accountRepository.save(account);
+        } else {
+            throw new RuntimeException("Tài khoản không tồn tại.");
+        }
+    }
+
+    public Double getBalance(String accountNumber) {
+        return accountRepository.findByAccountNumber(accountNumber)
+                .map(Account::getBalance)
+                .orElse(null);
     }
 
     // Lấy tất cả khách hàng (dành cho nhân viên ngân hàng)

@@ -1,64 +1,69 @@
 # 📝 Register (Đăng ký tài khoản)
 POST http://localhost:8080/accounts/register
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5OTk5OTk5OTk5Iiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NDMwMTQyMDksImV4cCI6MTc0MzAxNzgwOX0.vRJrSVZbNL8NPxk-vhWAyd4qbk7M5C5i2jNxStzpCDM
 
 {
-  "accountNumber": "0787520048",
-  "username": "duyenpham",
-  "password": "munngulamroi",
-  "fullName": "Duyen Phan",
+  "accountNumber": "0123789456",
+  "username": "phamthib",
+  "password": "bpham",
+  "fullName": "PHAM THI B",
   "accountType": "SAVINGS",
-  "status": "ACTIVE",
-  "balance": 1000.0,
-  "pin": "1234"
+  "status": "ACTIVE"
 }
-
 
 ###
 
-# 📝 Login (Đăng nhập)
+# 📝 Login (Đăng nhập & Lưu token tự động)
 POST http://localhost:8080/accounts/login
 Content-Type: application/json
 
 {
-  "accountNumber": "9999999999",
-  "password": "secureAdminPass"
+  "accountNumber": "0123789456",
+  "password": "bpham"
 }
+
+> {% client.global.set("authToken", response.body.token); %}
+
+###
+
+# 🛠 Debug - Kiểm tra token đã lưu
+GET http://localhost:8080/debug
+Authorization: Bearer {{authToken}}
 
 ###
 
 # 📝 Update Account Info (Cập nhật thông tin tài khoản)
-PUT http://localhost:8080/api/accounts/update
+PUT http://localhost:8080/accounts/update
 Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
+Authorization: Bearer {{authToken}}
 
 {
-  "email": "updated@example.com",
-  "phoneNumber": "0987654321"
+  "accountNumber": "0123789456",
+  "pin": "",
+  "phoneNumber": "0303044120"
 }
+
 
 ###
 
 # 📝 Get All Accounts (Lấy tất cả tài khoản)
-GET http://localhost:8080/api/accounts
-Authorization: Bearer {{TOKEN}}
+GET http://localhost:8080/accounts
+Authorization: Bearer {{authToken}}
 
 ###
 
 # 📝 Get Account by Number (Lấy tài khoản theo số)
-GET http://localhost:8080/api/accounts/123456
-Authorization: Bearer {{TOKEN}}
+GET http://localhost:8080/accounts/0123789456
+Authorization: Bearer {{authToken}}
 
 ###
 
 # 📝 Get Balance (Kiểm tra số dư)
-GET http://localhost:8080/api/accounts/123456/balance
-Authorization: Bearer {{TOKEN}}
+GET http://localhost:8080/accounts/0123789456/balance
+Authorization: Bearer {{authToken}}
 
 ###
 
 # 📝 Logout (Đăng xuất)
-POST http://localhost:8080/api/accounts/logout
-Authorization: Bearer {{TOKEN}}
-
+POST http://localhost:8080/accounts/logout
+Authorization: Bearer {{authToken}}

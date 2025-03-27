@@ -40,6 +40,7 @@ public class Account {
     @Column(name = "pin", length = 6, nullable = false)
     private String pin;
     private String role;
+    private String phoneNumber;
 
 
     // ✅ Constructor không tham số (BẮT BUỘC cho JPA)
@@ -149,5 +150,11 @@ public class Account {
 
     public void setRole(String role) {
         this.role = role;
+    }
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 }

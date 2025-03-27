@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.atm.model.TransactionType;
 import com.atm.util.JwtUtil;
+import org.springframework.stereotype.Service;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -21,6 +24,7 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final JwtUtil jwtUtil;
+    private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
 
     @Autowired
     public TransactionService(AccountService accountService, AccountRepository accountRepository, TransactionRepository transactionRepository, JwtUtil jwtUtil) {
@@ -33,11 +37,25 @@ public class TransactionService {
     // 📌 Đăng nhập và trả về token JWT
     public String login(String accountNumber, String pin) {
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
+
         if (accountOpt.isPresent() && verifyPin(pin, accountOpt.get().getPin())) {
-            // Lấy vai trò của tài khoản, giả sử là ADMIN hoặc USER (hoặc bất kỳ giá trị nào bạn sử dụng)
-            String role = accountOpt.get().getRole(); // Bạn cần đảm bảo rằng Account có phương thức getRole() hoặc tương tự
-            return jwtUtil.generateToken(accountNumber, role); // Truyền cả accountNumber và role vào
+            Account account = accountOpt.get();
+
+            // Nếu role NULL, gán mặc định là "USER"
+            if (account.getRole() == null) {
+                account.setRole("USER");
+                accountRepository.save(account);
+            }
+
+            long expirationTime = 3600000; // 1 giờ
+            String token = jwtUtil.generateToken(accountNumber, account.getRole(), expirationTime);
+
+            // 🔥 Thêm log để kiểm tra token
+            System.out.println("Generated Token: " + token);
+
+            return token;
         }
+
         return null;
     }
 
@@ -49,10 +67,15 @@ public class TransactionService {
     // 📌 Rút tiền
     public boolean withdraw(String token, double amount, TransactionType transactionType) {
         String accountNumber = jwtUtil.validateToken(token);
-        if (accountNumber == null) return false;
+        System.out.println("DEBUG: Account extracted from token -> " + accountNumber);
+        if (accountNumber == null) {
+            System.out.println("ERROR: Token không hợp lệ hoặc hết hạn");
+            return false;
+        }
 
         Account account = accountService.getAccount(accountNumber);
         if (account == null || amount > account.getBalance()) {
+            System.out.println("ERROR: Không tìm thấy tài khoản hoặc số dư không đủ");
             return false;
         }
 
@@ -95,5 +118,15 @@ public class TransactionService {
     // 📌 Xem lịch sử giao dịch
     public List<Transaction> getTransactionHistory(String accountNumber) {
         return transactionRepository.findByAccountNumber(accountNumber);
+    }
+
+    public void logout(String token) {
+        if (token != null) {
+            blacklistedTokens.add(token);
+        }
+    }
+
+    public boolean isTokenBlacklisted(String token) {
+        return token != null && blacklistedTokens.contains(token);
     }
 }

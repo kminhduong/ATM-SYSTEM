@@ -1,36 +1,47 @@
-# 🏧 Withdraw (Rút tiền không cần OTP)
-POST http://localhost:8080/api/transactions/withdraw
+### 📝 Login (Đăng nhập & Lưu token tự động)
+POST http://localhost:8080/api/transactions/login
 Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
 
 {
-  "atmId": "ATM001",
-  "amount": 1000
+  "accountNumber": "0123456789",
+  "pin": "1234"
+}
+
+> {% client.global.set("authToken", response.body.token); %}
+
+###
+
+### 📝 Withdraw (Rút tiền)
+POST http://localhost:8080/api/transactions/withdraw
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "accountNumber": "0123456789",
+  "amount": 5
 }
 
 ###
 
-# 🏧 Withdraw with OTP (Rút tiền có OTP)
+### 📝 Withdraw with OTP (Rút tiền qua OTP)
 POST http://localhost:8080/api/transactions/withdraw/otp
 Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
+Authorization: Bearer {{authToken}}
 
 {
-  "phoneNumber": "0123456789",
-  "atmId": "ATM001",
-  "amount": 500,
+  "phoneNumber": "0303044120",
+  "amount": 500000,
   "otp": "123456"
 }
 
 ###
 
-# 📜 Get Transaction History (Lịch sử giao dịch)
-GET http://localhost:8080/api/transactions/123456
-Authorization: Bearer {{TOKEN}}
+### 📝 Get Transaction History (Lấy lịch sử giao dịch)
+GET http://localhost:8080/api/transactions/0123789456
+Authorization: Bearer {{authToken}}
 
 ###
 
-# 📝 Logout (Đăng xuất khỏi giao dịch)
+### 📝 Logout (Đăng xuất)
 POST http://localhost:8080/api/transactions/logout
-Authorization: Bearer {{TOKEN}}
-
+Authorization: Bearer {{authToken}}
