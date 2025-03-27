@@ -18,8 +18,8 @@ POST http://localhost:8080/accounts/login
 Content-Type: application/json
 
 {
-  "accountNumber": "0123789456",
-  "password": "bpham"
+  "accountNumber": "9999999999",
+  "password": "secureAdminPass"
 }
 
 > {% client.global.set("authToken", response.body.token); %}

@@ -43,14 +43,14 @@ public class Main {
 
             // Tạo tài khoản admin mới
             AccountDTO admin = new AccountDTO(
-                    "9999999999",           // accountNumber
+                    "9999999999",        // accountNumber
                     "admin",                // username
                     "secureAdminPass",      // password
                     "Default Admin",        // fullName
                     "admin",                // userId
                     AccountType.SAVINGS,    // accountType
                     AccountStatus.ACTIVE,   // status
-                    0.0,                    // balance (hoặc giá trị hợp lý khác)
+                    0.0,                    // balance ( giá trị hợp lý )
                     "1234",                 // pin
                     "ADMIN"                 // role
             );
