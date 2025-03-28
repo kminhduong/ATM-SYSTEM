@@ -30,10 +30,14 @@ public class Main {
 
             // Lấy các bean từ context
             AccountService accountService = context.getBean(AccountService.class);
-            UserRepository userRepository = context.getBean(UserRepository.class); // ✅ Lấy UserRepository từ context
+            UserRepository userRepository = context.getBean(UserRepository.class);
+            BCryptPasswordEncoder passwordEncoder = context.getBean(BCryptPasswordEncoder.class);
 
             // Gọi phương thức khởi tạo tài khoản admin
-            initializeAdminAccount(accountService, userRepository);
+            logger.info("Calling initializeAdminAccount()...");
+            initializeAdminAccount(accountService, userRepository, passwordEncoder);
+            logger.info("initializeAdminAccount() executed.");
+            initializeAdminAccount(accountService, userRepository, passwordEncoder);
 
             logger.info("ATM System started successfully.");
         } catch (Exception e) {
@@ -41,31 +45,36 @@ public class Main {
         }
     }
 
-    private static void initializeAdminAccount(AccountService accountService, UserRepository userRepository) {
+    private static void initializeAdminAccount(AccountService accountService, UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         logger.info("Starting admin account initialization...");
-        if (!accountService.isUserExists("admin")) {
-            logger.info("Admin account does not exist, proceeding to create...");
 
-            // Tạo tài khoản admin mới
-            AccountDTO admin = new AccountDTO(
-                    "9999999999",           // accountNumber
-                    "admin",                // username
-                    "secureAdminPass",      // password
-                    "Default Admin",        // fullName
-                    "admin",                // userId
-                    AccountType.SAVINGS,    // accountType
-                    AccountStatus.ACTIVE,   // status
-                    0.0,                    // balance (hoặc giá trị hợp lý khác)
-                    "1234",                 // pin
-                    "ADMIN"                 // role
-            );
-
-            // Chuyển đổi DTO thành Entity và lưu vào cơ sở dữ liệu
-            Account account = admin.toAccount(userRepository); // ✅ Truyền UserRepository vào
-            accountService.register(account);
-            logger.info("Admin account has been created successfully!");
-        } else {
-            logger.info("Admin account already exists.");
+        if (accountService.isAdminAccountExists("admin")) {
+            logger.info("Admin account already exists. Skipping initialization.");
+            return;
         }
+
+        logger.info("Admin account does not exist, proceeding to create...");
+
+        // Mã hóa password và PIN
+        String encodedPassword = passwordEncoder.encode("secureAdminPass");
+        String encodedPin = passwordEncoder.encode("1234");
+
+        AccountDTO admin = new AccountDTO(
+                "9999999999",           // accountNumber
+                "admin",                // username
+                encodedPassword,        // ✅ Mật khẩu đã mã hóa
+                "Default Admin",        // fullName
+                "admin",                // userId
+                AccountType.SAVINGS,    // accountType
+                AccountStatus.ACTIVE,   // status
+                0.0,                    // balance
+                encodedPin,             // ✅ PIN đã mã hóa
+                "ADMIN"                 // role
+        );
+
+        Account account = admin.toAccount(userRepository);
+        accountService.register(account);
+
+        logger.info("Admin account has been created successfully!");
     }
 }

@@ -66,6 +66,7 @@ public class AccountService {
     // Đăng ký tài khoản mới
     @Transactional
     public Account register(Account account) {
+        logger.info("🔍 Đang vào phương thức register...");
         logger.info("Received request to register account: {}", account.getAccountNumber());
 
         // Kiểm tra xem tài khoản đã tồn tại hay chưa
@@ -93,8 +94,9 @@ public class AccountService {
             logger.info("User đã tồn tại: {}", user.getId());
         }
 
-        // Lưu tài khoản vào bảng Account
+        // Lưu tài khoản vào bảng Account trước
         Account savedAccount = accountRepository.save(account);
+        accountRepository.flush(); // 🚀 Đảm bảo Account được commit trước khi dùng trong Credential
 
         // Tạo và lưu thông tin Balance
         Balance balance = new Balance();
@@ -106,7 +108,7 @@ public class AccountService {
 
         // Tạo thông tin Credential
         Credential credential = new Credential();
-        credential.setAccount(savedAccount); // Liên kết Credential với Account
+        credential.setAccount(savedAccount); // ✅ Không cần set accountNumber nữa vì @MapsId tự xử lý
         credential.setPin(passwordEncoder.encode("000000")); // Mã hóa PIN mặc định
         credential.setFailedAttempts(0);
         credential.setLockTime(null);
@@ -252,6 +254,20 @@ public class AccountService {
         String sql = "SELECT COUNT(*) FROM user WHERE user_id = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
         return count != null && count > 0;
+    }
+
+    public boolean isAdminAccountExists(String userId) {
+        String sql = "SELECT COUNT(*) FROM account WHERE user_id = ? AND role = 'ADMIN'";
+        logger.info("Checking admin existence for userId: " + userId);
+
+        try {
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, new Object[]{userId});
+            logger.info("Admin account count: " + count);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            logger.error("Error checking admin account existence: ", e);
+            return false;
+        }
     }
 
     // Tạo user mới và trả về userId (giả sử user_id là UUID hoặc bạn tự sinh chuỗi)

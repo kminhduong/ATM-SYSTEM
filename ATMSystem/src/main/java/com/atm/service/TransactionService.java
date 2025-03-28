@@ -78,25 +78,37 @@ public class TransactionService {
     public boolean withdraw(String token, double amount, TransactionType transactionType) {
         String accountNumber = jwtUtil.validateToken(token);
         System.out.println("DEBUG: Account extracted from token -> " + accountNumber);
+
         if (accountNumber == null) {
             System.out.println("ERROR: Token không hợp lệ hoặc hết hạn");
             return false;
         }
 
+        // Lấy tài khoản từ accountService
         Account account = accountService.getAccount(accountNumber);
-        if (account == null || amount > account.getBalance()) {
-            System.out.println("ERROR: Không tìm thấy tài khoản hoặc số dư không đủ");
+        if (account == null) {
+            System.out.println("ERROR: Không tìm thấy tài khoản");
+            return false;
+        }
+
+        // Kiểm tra số dư có đủ để rút tiền không
+        if (amount > account.getBalance()) {
+            System.out.println("ERROR: Số dư không đủ");
             return false;
         }
 
         // Trừ tiền và cập nhật tài khoản
-        account.setBalance(account.getBalance() - amount);
-        account.setLastUpdated(LocalDateTime.now());
-        accountRepository.save(account);
+        synchronized (account) { // Đồng bộ hóa cập nhật số dư
+            account.setBalance(account.getBalance() - amount);
+            account.setLastUpdated(LocalDateTime.now());
+            accountRepository.save(account); // Lưu tài khoản đã cập nhật
+        }
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(accountNumber, amount, transactionType, new Date());
-        transactionRepository.save(transaction);
+        transactionRepository.save(transaction); // Lưu giao dịch
+
+        System.out.println("DEBUG: Giao dịch rút tiền thành công, số dư mới: " + account.getBalance());
         return true;
     }
 

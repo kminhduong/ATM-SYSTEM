@@ -4,6 +4,7 @@ import com.atm.model.Account;
 import com.atm.model.Transaction;
 import com.atm.model.TransactionType;
 import com.atm.service.TransactionService;
+import com.atm.dto.WithdrawRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -73,7 +74,7 @@ public class TransactionController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<String> withdraw(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<String> withdraw(@RequestHeader("Authorization") String authHeader, @RequestBody WithdrawRequest request) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
@@ -82,7 +83,19 @@ public class TransactionController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token has been logged out.");
             }
 
-            return ResponseEntity.ok("Withdraw successful.");
+            // Lấy thông tin tài khoản từ token
+            String accountNumber = jwtUtil.validateToken(token);
+            if (accountNumber == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid or expired token.");
+            }
+
+            // Kiểm tra và thực hiện rút tiền
+            boolean success = transactionService.withdraw(token, request.getAmount(), TransactionType.WITHDRAWAL); // Sử dụng WITHDRAWAL
+            if (success) {
+                return ResponseEntity.ok("Withdraw successful.");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Insufficient funds or transaction failed.");
+            }
         }
 
         return ResponseEntity.badRequest().body("Missing Authorization header.");

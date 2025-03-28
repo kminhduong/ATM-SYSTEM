@@ -3,12 +3,15 @@ POST http://localhost:8080/accounts/register
 Content-Type: application/json
 
 {
-  "accountNumber": "0785501162",
+  "accountNumber": "11111111111",
   "username": "chanhpham",
   "password": "chanh0506",
   "fullName": "PHAM VAN CHANH",
   "accountType": "SAVINGS",
-  "status": "ACTIVE"
+  "status": "ACTIVE",
+  "user": {
+    "id": "U12345"
+  }
 }
 
 ###
@@ -18,8 +21,8 @@ POST http://localhost:8080/accounts/login
 Content-Type: application/json
 
 {
-  "accountNumber": "9999999999",
-  "password": "secureAdminPass"
+  "accountNumber": "11111111111",
+  "password": "chanh0506"
 }
 
 > {% client.global.set("authToken", response.body.token); %}
@@ -38,11 +41,9 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "accountNumber": "0369258147",
-  "phoneNumber": "0703920317"
+  "accountNumber": "11111111111",
+  "pin": "111111"
 }
-
-
 
 ###
 

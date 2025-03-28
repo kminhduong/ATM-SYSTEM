@@ -12,8 +12,9 @@ public class Credential {
     private String accountNumber;
 
     @OneToOne
-    @JoinColumn(name = "account_number", referencedColumnName = "account_number", insertable = false, updatable = false)
-    private Account account; // Liên kết với Account
+    @MapsId // ✅ Chỉ định accountNumber là khóa chính của Credential, lấy từ Account
+    @JoinColumn(name = "account_number")
+    private Account account;
 
     @Column(name = "pin", length = 6, nullable = false)
     private String pin;

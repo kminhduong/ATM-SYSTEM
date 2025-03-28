@@ -24,13 +24,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Khi triển khai web, cần bật lại với csrf.withDefaults()
                 .cors(cors -> {}) // Tùy chỉnh CORS theo nhu cầu
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/error").permitAll() // Cho phép truy cập trang lỗi
                         .requestMatchers("/accounts/register", "/accounts/login", "/api/transactions/login").permitAll()
                         .requestMatchers("/accounts/update").authenticated()
-                        .requestMatchers("/accounts/balance").authenticated()  // Chỉ cho phép người đã đăng nhập
+                        .requestMatchers("/accounts/balance").authenticated()
                         .requestMatchers("/accounts/{accountNumber}").authenticated()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/accounts").hasAuthority("ADMIN")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")  // Cho phép ADMIN truy cập /admin/**
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasAuthority("USER")
                         .anyRequest().authenticated()
