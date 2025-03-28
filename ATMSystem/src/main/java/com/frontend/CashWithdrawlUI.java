@@ -69,7 +69,12 @@ public class CashWithdrawlUI extends JFrame {
 //            b3.addActionListener(this);
 //            b4.addActionListener(this);
 //            b5.addActionListener(this);
-//            b6.addActionListener(this);
+            b6.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    new EnterAmountUI().setVisible(true);
+                    dispose();
+                }
+            });
         b7.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 new CashWithdrawl_SignInUI().setVisible(true);

@@ -5,15 +5,12 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class EnterAmountUI extends JFrame {
+public class DepositUI extends JFrame {
     JLabel l1;
     public JTextField tf1;
     public JButton b1, b2;
-    public EnterAmountUI() {
-        setTitle("");
-
-        // Welcome text
-        l1 = new JLabel("ENTER THE AMOUNT TO WITHDRAW");
+    public DepositUI() {
+        l1 = new JLabel("ENTER THE AMOUNT TO DEPOSIT");
         l1.setFont(new Font("Osward", Font.BOLD, 28));
         l1.setBounds(150, 150, 800, 40);
         add(l1);
@@ -25,7 +22,7 @@ public class EnterAmountUI extends JFrame {
         b1.setBackground(Color.BLACK);
         b1.setForeground(Color.BLACK);
 
-        b2 = new JButton("Withdraw");
+        b2 = new JButton("Deposit");
         b2.setBackground(Color.BLACK);
         b2.setForeground(Color.BLACK);
         setLayout(null);
@@ -44,12 +41,13 @@ public class EnterAmountUI extends JFrame {
         setVisible(true);
         b1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new CashWithdrawlUI().setVisible(true);
+                new TransactionsUI().setVisible(true);
                 dispose();
             }
         });
     }
     public static void main(String[] args) {
-        new EnterAmountUI();
+        new DepositUI();
+
     }
 }

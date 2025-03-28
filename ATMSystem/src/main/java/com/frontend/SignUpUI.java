@@ -9,10 +9,8 @@ import java.util.regex.Pattern;
 
 public class SignUpUI extends JFrame implements ActionListener {
 
-    // Khai báo các thành phần giao diện
     JLabel l1, l2, l3, l4, l5, l6, l7, l8;
     JTextField t1, t2, t3, t4, t5, t6;
-//    JRadioButton r1, r2, r3, r4;
     JButton b1,b2;
     JComboBox<String> accountTypeCombo, statusCombo;
 
@@ -124,6 +122,12 @@ public class SignUpUI extends JFrame implements ActionListener {
         b2.setBounds(620, 600, 100, 50);
         add(b2);
         getContentPane().setBackground(Color.WHITE);
+        b1.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
         b2.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
 

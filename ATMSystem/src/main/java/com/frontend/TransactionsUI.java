@@ -20,11 +20,11 @@ import javax.swing.*;
             l1.setFont(new Font("System", Font.BOLD, 16));
 
             b1 = new JButton("Cash Withdrawl");
-            b2 = new JButton("View Balance");
+            b2 = new JButton("View Account");
             b3 = new JButton("Transfer");
             b4 = new JButton("Deposit");
             b5 = new JButton("Pin Change");
-            b6 = new JButton("Bill Top Bar");
+            b6 = new JButton("Transaction History");
             b7 = new JButton("Exit");
 
             setLayout(null);
@@ -67,9 +67,24 @@ import javax.swing.*;
             });
 //            b2.addActionListener(this);
 //            b3.addActionListener(this);
-//            b4.addActionListener(this);
-//            b5.addActionListener(this);
-//            b6.addActionListener(this);
+            b4.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    new DepositUI().setVisible(true);
+                    dispose();
+                }
+            });
+            b5.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    new PinChangeUI().setVisible(true);
+                    dispose();
+                }
+            });
+            b6.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    new TransactionHistoryUI().setVisible(true);
+                    dispose();
+                }
+            });
             b7.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     new LoginUI().setVisible(true);
