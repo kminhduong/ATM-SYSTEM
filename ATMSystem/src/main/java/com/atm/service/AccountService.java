@@ -257,12 +257,12 @@ public class AccountService {
         return count != null && count > 0;
     }
 
-    public boolean isAdminAccountExists(String userId) {
-        String sql = "SELECT COUNT(*) FROM account WHERE user_id = ? AND role = 'ADMIN'";
-        logger.info("Checking admin existence for userId: " + userId);
+    public boolean isAdminAccountExists(String username) {
+        String sql = "SELECT COUNT(*) FROM account WHERE username = ? AND role = 'ADMIN'";
+        logger.info("Checking admin existence for username: " + username);
 
         try {
-            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, new Object[]{userId});
+            Integer count = jdbcTemplate.queryForObject(sql, Integer.class, new Object[]{username});
             logger.info("Admin account count: " + count);
             return count != null && count > 0;
         } catch (Exception e) {
