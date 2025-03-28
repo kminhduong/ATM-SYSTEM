@@ -11,6 +11,10 @@ public class Account {
     @Column(name = "account_number", length = 50)
     private String accountNumber;
 
+    @OneToOne
+    @JoinColumn(name = "account_number", referencedColumnName = "account_number", insertable = false, updatable = false)
+    private Credential credential;
+
     @Column(name = "username", length = 50, nullable = false, unique = true)
     private String username;
 
@@ -20,8 +24,9 @@ public class Account {
     @Column(name = "full_name", length = 100, nullable = false)
     private String fullName;
 
-    @Column(name = "user_id", length = 50, nullable = false)
-    private String userId;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "account_type")
@@ -31,39 +36,52 @@ public class Account {
     @Column(name = "status", nullable = false)
     private AccountStatus status;
 
-    @Column(name = "balance", nullable = false)
-    private double balance; // 🆕 Thêm số dư tài khoản
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Balance balanceEntity;
 
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
 
-    @Column(name = "pin", length = 6, nullable = false)
-    private String pin;
     @Column(nullable = false)
     private String role;
-    private String phoneNumber;
-
 
     // ✅ Constructor không tham số (BẮT BUỘC cho JPA)
-    public Account() {
-    }
+    public Account() {}
 
     // ✅ Constructor đầy đủ
-    public Account(String accountNumber, String username, String password, String fullName, String userId, AccountType accountType, AccountStatus status, double balance, String pin, String role) {
+    public Account(String accountNumber, String username, String password, String fullName, User user, AccountType accountType, AccountStatus status, double balance, String pin, String role) {
         this.accountNumber = accountNumber;
         this.username = username;
         this.password = password;
         this.fullName = fullName;
-        this.userId = userId;
+        this.user = user; // ✅ Sửa lại từ userId thành user
         this.accountType = accountType;
         this.status = status;
-        this.balance = balance;
-        this.pin = pin;
         this.lastUpdated = LocalDateTime.now();
-        this.role = role; // Gán giá trị cho thuộc tính role
+        this.role = role;
     }
 
-    // Getters và Setters
+    // ✅ Getter & Setter sửa lại
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Credential getCredential() {
+        return credential;
+    }
+
+    public void setCredential(Credential credential) {
+        this.credential = credential;
+    }
+
+    public String getPin() {
+        return this.credential != null ? this.credential.getPin() : null;
+    }
+
     public String getAccountNumber() {
         return accountNumber;
     }
@@ -96,14 +114,6 @@ public class Account {
         this.fullName = fullName;
     }
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
     public AccountType getAccountType() {
         return accountType;
     }
@@ -120,21 +130,24 @@ public class Account {
         this.status = status;
     }
 
-    public double getBalance() { // 🆕 Getter balance
-        return balance;
+    public Balance getBalanceEntity() {
+        return balanceEntity;
     }
 
-    public void setBalance(double balance) { // 🆕 Setter balance
-        this.balance = balance;
+    public void setBalanceEntity(Balance balanceEntity) {
+        this.balanceEntity = balanceEntity;
     }
 
-    // Getter và Setter
-    public String getPin() {
-        return pin;
+    public double getBalance() {
+        return (balanceEntity != null) ? balanceEntity.getBalance() : 0.0;
     }
 
-    public void setPin(String pin) {
-        this.pin = pin;
+    public void setBalance(double balance) {
+        if (balanceEntity == null) {
+            balanceEntity = new Balance();
+            balanceEntity.setAccount(this);
+        }
+        balanceEntity.setBalance(balance);
     }
 
     public LocalDateTime getLastUpdated() {
@@ -151,11 +164,5 @@ public class Account {
 
     public void setRole(String role) {
         this.role = role;
-    }
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
     }
 }

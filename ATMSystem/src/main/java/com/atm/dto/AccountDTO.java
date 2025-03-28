@@ -3,6 +3,8 @@ package com.atm.dto;
 import com.atm.model.Account;
 import com.atm.model.AccountType;
 import com.atm.model.AccountStatus;
+import com.atm.model.User;
+import com.atm.repository.UserRepository;
 
 public class AccountDTO {
 
@@ -13,7 +15,7 @@ public class AccountDTO {
     private String userId;
     private AccountType accountType;
     private AccountStatus status;
-    private double balance;
+    private Double balance;
     private String pin;
     private String role;
     private String phoneNumber;
@@ -23,7 +25,8 @@ public class AccountDTO {
     }
 
     // Constructor đầy đủ
-    public AccountDTO(String accountNumber, String username, String password, String fullName, String userId, AccountType accountType, AccountStatus status, double balance, String pin, String role) {
+    public AccountDTO(String accountNumber, String username, String password, String fullName, String userId,
+                      AccountType accountType, AccountStatus status, Double balance, String pin, String role) {
         this.accountNumber = accountNumber;
         this.username = username;
         this.password = password;
@@ -36,14 +39,17 @@ public class AccountDTO {
         this.role = role;
     }
 
+
     // Chuyển từ DTO thành Entity
-    public Account toAccount() {
+    public Account toAccount(UserRepository userRepository) {
+        User user = (this.userId != null) ? userRepository.findById(this.userId).orElse(null) : null;
+
         return new Account(
                 this.accountNumber != null ? this.accountNumber : "Unknown",
                 this.username != null ? this.username : "DefaultUsername",
                 this.password != null ? this.password : "DefaultPassword",
                 this.fullName != null ? this.fullName : "Unknown Name",
-                this.userId,
+                user,  // Chuyển đổi userId thành User
                 this.accountType != null ? this.accountType : AccountType.SAVINGS,
                 this.status != null ? this.status : AccountStatus.ACTIVE,
                 0.0, // Số dư mặc định
@@ -59,14 +65,15 @@ public class AccountDTO {
                 account.getUsername(),
                 account.getPassword(),
                 account.getFullName(),
-                account.getUserId(),
+                (account.getUser() != null) ? account.getUser().getId() : null,  // Chuyển User thành String
                 account.getAccountType(),
                 account.getStatus(),
                 account.getBalance(),
-                account.getPin(),  // Include pin
+                (account.getCredential() != null) ? account.getCredential().getPin() : null,  // Lấy pin từ Credential
                 account.getRole()   // Include role
         );
     }
+
 
     // Getters và Setters
     public String getAccountNumber() {
@@ -125,11 +132,11 @@ public class AccountDTO {
         this.status = status;
     }
 
-    public double getBalance() {
+    public Double getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public void setBalance(Double balance) {
         this.balance = balance;
     }
     public String getPin() {
@@ -142,6 +149,7 @@ public class AccountDTO {
     public String getRole() {
         return role;
     }
+
     public void setRole(String role) {
         this.role = role;
     }

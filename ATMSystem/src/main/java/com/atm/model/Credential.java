@@ -11,6 +11,10 @@ public class Credential {
     @Column(name = "account_number", length = 50)
     private String accountNumber;
 
+    @OneToOne
+    @JoinColumn(name = "account_number", referencedColumnName = "account_number", insertable = false, updatable = false)
+    private Account account; // Liên kết với Account
+
     @Column(name = "pin", length = 6, nullable = false)
     private String pin;
 
@@ -30,6 +34,14 @@ public class Credential {
 
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     public String getPin() {

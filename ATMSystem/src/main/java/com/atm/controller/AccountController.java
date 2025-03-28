@@ -1,10 +1,8 @@
 package com.atm.controller;
 
 import com.atm.dto.AccountDTO;
-import com.atm.dto.LoginRequest;
 import com.atm.model.Account;
-import com.atm.service.AccountService;
-import com.atm.dto.AccountDTO;
+import com.atm.repository.UserRepository;
 import com.atm.service.AccountService;
 import com.atm.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,13 +27,15 @@ public class AccountController {
 
     private final AccountService accountService;
     private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
+    private final UserRepository userRepository; // Thêm UserRepository
 
     private final JwtUtil jwtUtil;
 
     @Autowired
-    public AccountController(JwtUtil jwtUtil, AccountService accountService) {
+    public AccountController(JwtUtil jwtUtil, AccountService accountService, UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
         this.accountService = accountService;
+        this.userRepository = userRepository; // ✅ Đã inject UserRepository đúng cách
     }
 
     // Đăng ký tài khoản mới (tự động tạo user nếu chưa có)
@@ -78,7 +78,6 @@ public class AccountController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody AccountDTO accountDTO) {
         try {
-            // Bỏ qua kiểm tra Authorization để test
             logger.info("Skipping authorization check for testing.");
 
             // Kiểm tra nếu userId chưa tồn tại, tự động tạo user
@@ -89,8 +88,8 @@ public class AccountController {
 
             accountDTO.setUserId(userId);
 
-            // Đăng ký tài khoản (tích hợp logic Credential trong service)
-            accountService.register(accountDTO.toAccount());
+            // Đăng ký tài khoản (truyền UserRepository vào toAccount)
+            accountService.register(accountDTO.toAccount(userRepository));
 
             return ResponseEntity.ok("Tài khoản đã được đăng ký thành công!");
         } catch (IllegalArgumentException e) {
@@ -134,15 +133,17 @@ public class AccountController {
         }
 
         String token = authHeader.substring(7);
-        String accountNumber = jwtUtil.validateToken(token);
+        String accountNumber = jwtUtil.validateToken(token); // Lấy accountNumber từ token
 
         if (accountNumber == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token không hợp lệ!");
         }
 
         try {
-            accountService.updateAccount(accountDTO);
+            accountService.updateAccount(accountDTO, accountNumber);
             return ResponseEntity.ok("Cập nhật tài khoản thành công!");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi khi cập nhật tài khoản.");
         }

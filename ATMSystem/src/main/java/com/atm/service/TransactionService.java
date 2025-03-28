@@ -1,10 +1,12 @@
 package com.atm.service;
 
+import com.atm.model.Credential;
 import com.atm.model.Transaction;
 import com.atm.model.Account;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.atm.model.TransactionType;
 import com.atm.util.JwtUtil;
@@ -25,43 +27,51 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final JwtUtil jwtUtil;
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
+    private final PasswordEncoder passwordEncoder;
+
 
     @Autowired
-    public TransactionService(AccountService accountService, AccountRepository accountRepository, TransactionRepository transactionRepository, JwtUtil jwtUtil) {
+    public TransactionService(AccountService accountService,
+                              AccountRepository accountRepository,
+                              TransactionRepository transactionRepository,
+                              JwtUtil jwtUtil,
+                              PasswordEncoder passwordEncoder) {  // Inject passwordEncoder vào constructor
         this.accountService = accountService;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;  // Gán giá trị cho passwordEncoder
     }
 
     // 📌 Đăng nhập và trả về token JWT
     public String login(String accountNumber, String pin) {
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
 
-        if (accountOpt.isPresent() && verifyPin(pin, accountOpt.get().getPin())) {
+        if (accountOpt.isPresent()) {
             Account account = accountOpt.get();
+            Credential credential = account.getCredential();
 
-            // Nếu role NULL, gán mặc định là "USER"
-            if (account.getRole() == null) {
-                account.setRole("USER");
-                accountRepository.save(account);
+            if (credential != null && verifyPin(pin, credential.getPin())) {  // So sánh pin với Credential
+                if (account.getRole() == null) {
+                    account.setRole("USER");
+                    accountRepository.save(account);
+                }
+
+                long expirationTime = 3600000; // 1 giờ
+                String token = jwtUtil.generateToken(accountNumber, account.getRole(), expirationTime);
+
+                System.out.println("Generated Token: " + token);
+
+                return token;
             }
-
-            long expirationTime = 3600000; // 1 giờ
-            String token = jwtUtil.generateToken(accountNumber, account.getRole(), expirationTime);
-
-            // 🔥 Thêm log để kiểm tra token
-            System.out.println("Generated Token: " + token);
-
-            return token;
         }
 
         return null;
     }
 
-    // 📌 Kiểm tra mã PIN
-    private boolean verifyPin(String inputPin, String actualPin) {
-        return inputPin.equals(actualPin);
+    // Phương thức kiểm tra pin (sử dụng mã hóa)
+    private boolean verifyPin(String rawPin, String encodedPin) {
+        return passwordEncoder.matches(rawPin, encodedPin);  // So sánh pin nhập vào với pin đã mã hóa
     }
 
     // 📌 Rút tiền

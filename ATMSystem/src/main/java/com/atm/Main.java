@@ -4,6 +4,7 @@ import com.atm.dto.AccountDTO;
 import com.atm.model.Account;
 import com.atm.model.AccountType;
 import com.atm.service.AccountService;
+import com.atm.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -27,8 +28,12 @@ public class Main {
             // Khởi chạy ứng dụng và lấy Spring Context
             ConfigurableApplicationContext context = SpringApplication.run(Main.class, args);
 
+            // Lấy các bean từ context
+            AccountService accountService = context.getBean(AccountService.class);
+            UserRepository userRepository = context.getBean(UserRepository.class); // ✅ Lấy UserRepository từ context
+
             // Gọi phương thức khởi tạo tài khoản admin
-            initializeAdminAccount(context.getBean(AccountService.class));
+            initializeAdminAccount(accountService, userRepository);
 
             logger.info("ATM System started successfully.");
         } catch (Exception e) {
@@ -36,7 +41,7 @@ public class Main {
         }
     }
 
-    private static void initializeAdminAccount(AccountService accountService) {
+    private static void initializeAdminAccount(AccountService accountService, UserRepository userRepository) {
         logger.info("Starting admin account initialization...");
         if (!accountService.isUserExists("admin")) {
             logger.info("Admin account does not exist, proceeding to create...");
@@ -56,8 +61,8 @@ public class Main {
             );
 
             // Chuyển đổi DTO thành Entity và lưu vào cơ sở dữ liệu
-            Account account = admin.toAccount();
-            accountService.register(account); // Gọi phương thức register để lưu tài khoản admin
+            Account account = admin.toAccount(userRepository); // ✅ Truyền UserRepository vào
+            accountService.register(account);
             logger.info("Admin account has been created successfully!");
         } else {
             logger.info("Admin account already exists.");

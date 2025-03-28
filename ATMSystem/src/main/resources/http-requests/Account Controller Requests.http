@@ -3,10 +3,10 @@ POST http://localhost:8080/accounts/register
 Content-Type: application/json
 
 {
-  "accountNumber": "0369258147",
-  "username": "dinhthida",
-  "password": "dadinh",
-  "fullName": "DINH THI DA",
+  "accountNumber": "0785501162",
+  "username": "chanhpham",
+  "password": "chanh0506",
+  "fullName": "PHAM VAN CHANH",
   "accountType": "SAVINGS",
   "status": "ACTIVE"
 }
@@ -39,9 +39,9 @@ Authorization: Bearer {{authToken}}
 
 {
   "accountNumber": "0369258147",
-  "balance": "1000000",
-  "pin": "111111"
+  "phoneNumber": "0703920317"
 }
+
 
 
 ###
