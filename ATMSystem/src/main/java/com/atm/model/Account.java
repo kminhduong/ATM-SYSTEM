@@ -119,7 +119,8 @@ public class Account {
     }
 
     public void setAccountType(String type) {
-        this.accountType = AccountType.fromString(type);
+        // Chuyển chuỗi thành Enum
+        this.accountType = AccountType.valueOf(type);  // Chuyển từ String thành Enum
     }
 
     public AccountStatus getStatus() {

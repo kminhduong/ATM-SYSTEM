@@ -4,7 +4,7 @@ Content-Type: application/json
 
 {
   "accountNumber": "11111111111",
-  "pin": "111111"
+  "pin": "555555"
 }
 
 > {% client.global.set("authToken", response.body.token); %}
@@ -13,13 +13,14 @@ Content-Type: application/json
 
 ### 📝 Withdraw (Rút tiền)
 POST http://localhost:8080/api/transactions/withdraw
+Authorization: Bearer {{authToken}}  // Thay <your_generated_jwt_token> bằng {{authToken}} nếu bạn dùng Postman
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
 
 {
-  "accountNumber": "11111111111",
-  "amount": 50
+  "amount": 50000,
+  "transactionType": "WITHDRAW"
 }
+
 
 ###
 
@@ -29,16 +30,16 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "phoneNumber": "0303044120",
-  "amount": 500000,
+  "phoneNumber": "0703920317",
+  "amount": 50,
   "otp": "123456"
 }
 
 ###
 
 ### 📝 Get Transaction History (Lấy lịch sử giao dịch)
-GET http://localhost:8080/api/transactions/0147258369
-Authorization: Bearer {{authToken}}
+GET http://localhost:8080/api/transactions/history?token={{authToken}}
+
 
 ###
 

@@ -3,16 +3,17 @@ POST http://localhost:8080/accounts/register
 Content-Type: application/json
 
 {
-  "accountNumber": "11111111111",
-  "username": "chanhpham",
-  "password": "chanh0506",
-  "fullName": "PHAM VAN CHANH",
+  "accountNumber": "0000000000",
+  "username": "phamhong",
+  "password": "hong",
+  "fullName": "PHAM THI KIM HONG",
   "accountType": "SAVINGS",
   "status": "ACTIVE",
   "user": {
-    "id": "U12345"
+    "id": "u00000"
   }
 }
+
 
 ###
 
@@ -42,7 +43,7 @@ Authorization: Bearer {{authToken}}
 
 {
   "accountNumber": "11111111111",
-  "pin": "111111"
+  "pin": "555555"
 }
 
 ###

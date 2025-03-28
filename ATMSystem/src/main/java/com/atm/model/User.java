@@ -12,7 +12,7 @@ public class User {
 
     @Id
     @Column(name = "user_id", length = 50, updatable = false, nullable = false)
-    private String userId; // Nếu cần dùng UUID, đổi sang UUID userId;
+    private String userId;  // Sử dụng String cho userId
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
@@ -35,7 +35,7 @@ public class User {
 
     // ✅ Constructor tự động tạo userId
     public User(String name, String email, String phone) {
-        this.userId = UUID.randomUUID().toString();
+        this.userId = UUID.randomUUID().toString();  // Tạo userId tự động
         this.name = name;
         this.email = email;
         this.phone = phone;
@@ -82,13 +82,6 @@ public class User {
     public void setAccounts(List<Account> accounts) {
         this.accounts = accounts;
     }
-    public String getId() {
-        return id;
-    }
-    public void setId(String id) {
-        this.id = id;
-    }
-    private String id;
 
     @Override
     public String toString() {

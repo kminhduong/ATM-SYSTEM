@@ -1,5 +1,6 @@
 package com.atm.service;
 
+import com.atm.dto.ApiResponse;
 import com.atm.model.Credential;
 import com.atm.model.Transaction;
 import com.atm.model.Account;
@@ -57,6 +58,7 @@ public class TransactionService {
                     accountRepository.save(account);
                 }
 
+                // Tạo JWT token
                 long expirationTime = 3600000; // 1 giờ
                 String token = jwtUtil.generateToken(accountNumber, account.getRole(), expirationTime);
 
@@ -66,7 +68,7 @@ public class TransactionService {
             }
         }
 
-        return null;
+        return null; // Trả về null nếu tài khoản không hợp lệ
     }
 
     // Phương thức kiểm tra pin (sử dụng mã hóa)
@@ -74,42 +76,46 @@ public class TransactionService {
         return passwordEncoder.matches(rawPin, encodedPin);  // So sánh pin nhập vào với pin đã mã hóa
     }
 
-    // 📌 Rút tiền
-    public boolean withdraw(String token, double amount, TransactionType transactionType) {
+    public ApiResponse<String> withdraw(String token, double amount, TransactionType transactionType) {
+        // Xác minh token và lấy số tài khoản từ token
         String accountNumber = jwtUtil.validateToken(token);
-        System.out.println("DEBUG: Account extracted from token -> " + accountNumber);
-
         if (accountNumber == null) {
-            System.out.println("ERROR: Token không hợp lệ hoặc hết hạn");
-            return false;
+            // Token không hợp lệ hoặc hết hạn
+            return new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null);
         }
 
-        // Lấy tài khoản từ accountService
-        Account account = accountService.getAccount(accountNumber);
-        if (account == null) {
-            System.out.println("ERROR: Không tìm thấy tài khoản");
-            return false;
+        // Kiểm tra quyền của người dùng từ token
+        String role = jwtUtil.getRoleFromToken(token);
+        if (!"USER".equals(role)) {
+            return new ApiResponse<>("Bạn không có quyền thực hiện giao dịch này", null);
         }
+
+        // Lấy tài khoản từ accountService (hoặc từ DB)
+        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
+        if (accountOpt.isEmpty()) {
+            return new ApiResponse<>("Không tìm thấy tài khoản", null);
+        }
+
+        Account account = accountOpt.get();
 
         // Kiểm tra số dư có đủ để rút tiền không
         if (amount > account.getBalance()) {
-            System.out.println("ERROR: Số dư không đủ");
-            return false;
+            return new ApiResponse<>("Số dư không đủ để thực hiện giao dịch", null);
         }
 
         // Trừ tiền và cập nhật tài khoản
-        synchronized (account) { // Đồng bộ hóa cập nhật số dư
+        synchronized (account) {
             account.setBalance(account.getBalance() - amount);
             account.setLastUpdated(LocalDateTime.now());
-            accountRepository.save(account); // Lưu tài khoản đã cập nhật
+            accountRepository.save(account);
         }
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(accountNumber, amount, transactionType, new Date());
-        transactionRepository.save(transaction); // Lưu giao dịch
+        transactionRepository.save(transaction);
 
-        System.out.println("DEBUG: Giao dịch rút tiền thành công, số dư mới: " + account.getBalance());
-        return true;
+        // Giao dịch thành công, trả về thông báo và số dư dưới dạng String
+        return new ApiResponse<>("Giao dịch rút tiền thành công", String.valueOf(account.getBalance()));
     }
 
     // 📌 Rút tiền qua OTP
@@ -138,8 +144,9 @@ public class TransactionService {
     }
 
     // 📌 Xem lịch sử giao dịch
-    public List<Transaction> getTransactionHistory(String accountNumber) {
-        return transactionRepository.findByAccountNumber(accountNumber);
+    public ApiResponse<List<Transaction>> getTransactionHistory(String accountNumber) {
+        List<Transaction> transactions = transactionRepository.findByAccountNumber(accountNumber);
+        return new ApiResponse<>("Lịch sử giao dịch", transactions);
     }
 
     public void logout(String token) {

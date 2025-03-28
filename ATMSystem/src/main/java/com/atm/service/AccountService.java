@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class AccountService {
@@ -81,17 +82,17 @@ public class AccountService {
         // Kiểm tra User của tài khoản
         if (user == null) {
             logger.info("User của tài khoản là null, kiểm tra lại từ DB...");
-            user = userRepository.findById(account.getUser().getId()).orElse(null);
+            user = userRepository.findById(account.getUser().getUserId()).orElse(null);
         }
 
         if (user == null) {
             logger.info("Không tìm thấy User, tạo User mới...");
-            String newUserId = createUser(account.getFullName());
-            user = userRepository.findById(newUserId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy User mới tạo với ID: " + newUserId));
-            account.setUser(user);
+            user = new User(account.getFullName(), "default-email@example.com", "default-phone");
+            userRepository.save(user);  // Lưu User mới vào DB
+
+            account.setUser(user);  // Gán User cho tài khoản
         } else {
-            logger.info("User đã tồn tại: {}", user.getId());
+            logger.info("User đã tồn tại: {}", user.getUserId());
         }
 
         // Lưu tài khoản vào bảng Account trước

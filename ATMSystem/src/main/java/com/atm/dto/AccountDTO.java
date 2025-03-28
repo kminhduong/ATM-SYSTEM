@@ -65,7 +65,7 @@ public class AccountDTO {
                 account.getUsername(),
                 account.getPassword(),
                 account.getFullName(),
-                (account.getUser() != null) ? account.getUser().getId() : null,  // Chuyển User thành String
+                (account.getUser() != null) ? account.getUser().getUserId() : null,  // Sửa từ getId() thành getUserId()
                 account.getAccountType(),
                 account.getStatus(),
                 account.getBalance(),
@@ -73,6 +73,7 @@ public class AccountDTO {
                 account.getRole()   // Include role
         );
     }
+
 
 
     // Getters và Setters
