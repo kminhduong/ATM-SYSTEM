@@ -20,7 +20,7 @@ public class LoginUI extends JFrame {
         l1.setBounds(250, 50, 450, 40);
         add(l1);
 
-        // Card No. label and text field
+        // Account Number label and text field
         l2 = new JLabel("Account Number:");
         l2.setFont(new Font("Raleway", Font.BOLD, 22));
         l2.setBounds(50, 175, 300, 30);
@@ -32,7 +32,7 @@ public class LoginUI extends JFrame {
         add(tf1);
 
         // PIN label and password field
-        l3 = new JLabel("Password:");
+        l3 = new JLabel("PIN:");
         l3.setFont(new Font("Raleway", Font.BOLD, 22));
         l3.setBounds(50, 270, 300, 30);
         add(l3);
@@ -57,16 +57,16 @@ public class LoginUI extends JFrame {
 
         setLayout(null);
 
-        b1.setFont(new Font("Arial", Font.BOLD, 14));
-        b1.setBounds(150, 370, 100, 50);
+        b1.setFont(new Font("Arial", Font.BOLD, 20));
+        b1.setBounds(100, 370, 150, 50);
         add(b1);
 
-        b2.setFont(new Font("Arial", Font.BOLD, 14));
-        b2.setBounds(330, 370, 100, 50);
+        b2.setFont(new Font("Arial", Font.BOLD, 20));
+        b2.setBounds(300, 370, 150, 50);
         add(b2);
 
-        b3.setFont(new Font("Arial", Font.BOLD, 14));
-        b3.setBounds(175, 450, 230, 50);
+        b3.setFont(new Font("Arial", Font.BOLD, 20));
+        b3.setBounds(200, 450, 150, 50);
         add(b3);
 
         getContentPane().setBackground(Color.WHITE);
@@ -75,28 +75,25 @@ public class LoginUI extends JFrame {
         setLocation(250, 200);
         setVisible(true);
 
-        // Add action listeners for buttons
+        // Action listeners for buttons
         b1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                // Handle sign in logic
-                String cardNo = tf1.getText();
+                String accountNumber = tf1.getText();
                 String pin = new String(pf2.getPassword());
 
-                // This is where you'd normally check the credentials
-                if (cardNo.equals("123456") && pin.equals("1234")) {
+                // This is where you'd check credentials with a backend
+                if (accountNumber.equals("123456") && pin.equals("1234")) {
                     JOptionPane.showMessageDialog(null, "Login Successful!");
-                    new TransactionsUI().setVisible(true);
-                    dispose();
-                    // You can redirect to another UI (e.g., Transactions UI) here
+                    new TransactionsUI(accountNumber).setVisible(true);  // Pass accountNumber to TransactionsUI
+                    dispose();  // Close login screen
                 } else {
-                    JOptionPane.showMessageDialog(null, "Invalid Card No or Password");
+                    JOptionPane.showMessageDialog(null, "Invalid Account Number or PIN");
                 }
             }
         });
 
         b2.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                // Clear fields
                 tf1.setText("");
                 pf2.setText("");
             }
@@ -104,13 +101,11 @@ public class LoginUI extends JFrame {
 
         b3.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-
-                // Mở giao diện SignUpUI
+                // Open Sign Up screen
                 new SignUpUI().setVisible(true);
                 dispose();
             }
         });
-
     }
 
     public static void main(String[] args) {

@@ -7,9 +7,11 @@ public class PinChangeUI extends JFrame {
     JLabel l1,l2,l3,l4;
     public JTextField tf1, tf2,tf3;
     public JButton b1, b2;
-    public PinChangeUI() {
+    public String accountNumber;
+    public PinChangeUI(String accountNumber) {
+        this.accountNumber = accountNumber;
         l1 = new JLabel("ENTER THE AMOUNT TO DEPOSIT");
-        l1.setFont(new Font("Osward", Font.BOLD, 30));
+        l1.setFont(new Font("Osward", Font.BOLD, 32));
         l1.setBounds(175, 75, 800, 40);
         add(l1);
         l2 = new JLabel("Enter current PIN:");
@@ -45,11 +47,11 @@ public class PinChangeUI extends JFrame {
         b2.setForeground(Color.BLACK);
         setLayout(null);
         b1.setFont(new Font("Arial", Font.BOLD, 24));
-        b1.setBounds(350, 500, 200, 60);
+        b1.setBounds(350, 500, 200, 50);
         add(b1);
 
         b2.setFont(new Font("Arial", Font.BOLD, 24));
-        b2.setBounds(600, 500, 200, 60);
+        b2.setBounds(600, 500, 200, 50);
         add(b2);
         getContentPane().setBackground(Color.WHITE);
 
@@ -58,7 +60,7 @@ public class PinChangeUI extends JFrame {
         setVisible(true);
         b1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                new TransactionsUI().setVisible(true);
+                new TransactionsUI(accountNumber).setVisible(true);
                 dispose();
             }
         });
@@ -66,8 +68,5 @@ public class PinChangeUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
             }
         });
-    }
-    public static void main(String[] args) {
-        new PinChangeUI().setVisible(true);
     }
 }

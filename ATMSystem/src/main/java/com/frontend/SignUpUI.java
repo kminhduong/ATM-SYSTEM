@@ -21,7 +21,7 @@ public class SignUpUI extends JFrame implements ActionListener {
         setTitle("NEW ACCOUNT APPLICATION FORM");
 
         l1 = new JLabel("APPLICATION FORM NO. " + first4);
-        l1.setFont(new Font("Raleway", Font.BOLD, 38));
+        l1.setFont(new Font("Raleway", Font.BOLD, 32));
 
         l2 = new JLabel("Full Name:");
         l2.setFont(new Font("Raleway", Font.BOLD, 20));
