@@ -18,9 +18,9 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("/{userId}")
-    public ResponseEntity<?> getUserById(@PathVariable String userId) {
+    public ResponseEntity<?> getUserInfo(@PathVariable String userId) {
         try {
-            User user = userService.getUserById(userId);
+            User user = userService.getUserInfo(userId);
             return ResponseEntity.ok(user);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + e.getMessage());

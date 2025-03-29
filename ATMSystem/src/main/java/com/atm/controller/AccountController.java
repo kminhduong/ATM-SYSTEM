@@ -5,7 +5,9 @@ import com.atm.model.Account;
 import com.atm.model.User;
 import com.atm.repository.UserRepository;
 import com.atm.service.AccountService;
+import com.atm.service.BalanceService;
 import com.atm.service.TransactionService;
+import com.atm.service.UserService;
 import com.atm.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,18 +23,24 @@ import java.util.Map;
 public class AccountController {
 
     private final AccountService accountService;
+    private final UserService userService;
     private final JwtUtil jwtUtil;
     private final TransactionService transactionService;
     private final UserRepository userRepository; // 🔹 Thêm biến này
+    private final BalanceService balanceService;
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountController.class);
 
     @Autowired
-    public AccountController(JwtUtil jwtUtil, AccountService accountService, UserRepository userRepository, TransactionService transactionService) {
+    public AccountController(JwtUtil jwtUtil, AccountService accountService,
+                             UserRepository userRepository, TransactionService transactionService,
+                             UserService userService, BalanceService balanceService) {
         this.jwtUtil = jwtUtil;
         this.accountService = accountService;
         this.userRepository = userRepository; // 🔹 Inject vào constructor
         this.transactionService = transactionService;
+        this.userService = userService;
+        this.balanceService = balanceService;
     }
 
     @PostMapping("/register")
@@ -55,14 +63,14 @@ public class AccountController {
 
                 // Tạo người dùng mới nếu chưa tồn tại
                 User user = new User(userId, accountDTO.getFullName(), accountDTO.getUsername(), accountDTO.getPhoneNumber());
-                accountService.createUser(user);
+                userService.createUser(user);
             } else {
                 logger.info("User with userId: {} already exists.", userId);
             }
 
             // Chuyển đổi DTO thành Account entity và đăng ký tài khoản
             Account account = accountDTO.toAccount(userRepository);  // Chuyển từ DTO thành Account entity
-            accountService.register(account);
+            accountService.createAccount(account);
 
             logger.info("Account registered successfully for userId: {}", userId);
             return ResponseEntity.ok("Tài khoản đã được đăng ký thành công!");
@@ -96,8 +104,8 @@ public class AccountController {
 
     @GetMapping("/balance")
     public ResponseEntity<Double> getBalance() {
-        String accountNumber = accountService.getLoggedInAccountNumber();
-        return accountNumber != null ? ResponseEntity.ok(accountService.getBalance(accountNumber))
+        String accountNumber = balanceService.getLoggedInAccountNumber();
+        return accountNumber != null ? ResponseEntity.ok(balanceService.getBalance(accountNumber))
                 : ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 

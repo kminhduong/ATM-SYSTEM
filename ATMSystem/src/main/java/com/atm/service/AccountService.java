@@ -35,6 +35,7 @@ public class AccountService {
     private final JdbcTemplate jdbcTemplate;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final BalanceService balanceService;
 
     @Autowired
     public AccountService(AccountRepository accountRepository,
@@ -43,7 +44,7 @@ public class AccountService {
                           UserRepository userRepository,
                           JdbcTemplate jdbcTemplate,
                           JwtUtil jwtUtil,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder, BalanceService balanceService) {
         this.accountRepository = accountRepository;
         this.credentialRepository = credentialRepository;
         this.balanceRepository = balanceRepository;
@@ -51,6 +52,7 @@ public class AccountService {
         this.jdbcTemplate = jdbcTemplate;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.balanceService = balanceService;
     }
 
     public Account getAccount(String accountNumber) {
@@ -68,7 +70,7 @@ public class AccountService {
 
     // Đăng ký tài khoản mới
     @Transactional
-    public Account register(Account account) {
+    public Account createAccount(Account account) {
         logger.info("🔍 Đang vào phương thức register...");
         logger.info("Received request to register account: {}", account.getAccountNumber());
 
@@ -157,39 +159,6 @@ public class AccountService {
         return count != null && count > 0;
     }
 
-    // Tạo mới User nếu chưa tồn tại
-    // Trong AccountService
-    public void createUser(User user) {
-        logger.info("Creating user with id: {}", user.getUserId());
-
-        String sqlCheck = "SELECT user_id FROM `User` WHERE user_id = ?";
-        String existingUserId = null;
-
-        try {
-            existingUserId = jdbcTemplate.queryForObject(sqlCheck, String.class, user.getUserId());
-        } catch (EmptyResultDataAccessException e) {
-            // Nếu không tìm thấy, tiếp tục tạo mới
-        }
-
-        if (existingUserId != null) {
-            logger.info("User already exists with ID: {}", existingUserId);
-            return; // Hoặc bạn có thể ném ra ngoại lệ nếu cần
-        } else {
-            logger.info("User does not exist, creating user with id: {}", user.getUserId());
-
-            // Chèn user mới vào cơ sở dữ liệu
-            String sqlInsert = "INSERT INTO `User` (user_id, name) VALUES (?, ?)";
-            int rows = jdbcTemplate.update(sqlInsert, user.getUserId(), user.getName());
-
-            if (rows > 0) {
-                logger.info("User created with ID: {}", user.getUserId());
-            } else {
-                logger.error("Failed to create user with id: {}", user.getUserId());
-                throw new RuntimeException("Failed to create user");
-            }
-        }
-    }
-
     @Transactional
     public void updateAccount(AccountDTO accountDTO, String accountNumber) {
         Optional<Account> optionalAccount = accountRepository.findById(accountDTO.getAccountNumber());
@@ -208,21 +177,8 @@ public class AccountService {
                 account.setFullName(accountDTO.getFullName());
             }
 
-            // Cập nhật Balance nếu tồn tại, hoặc tạo mới
-            if (accountDTO.getBalance() != null) {
-                if (account.getBalanceEntity() == null) {
-                    // Tạo mới Balance nếu chưa có
-                    Balance newBalance = new Balance();
-                    newBalance.setBalance(accountDTO.getBalance());  // Sử dụng balance thay vì available_balance
-                    newBalance.setAccount(account);  // Liên kết Balance với Account
-                    account.setBalanceEntity(newBalance);
-                    balanceRepository.save(newBalance);  // Lưu Balance mới
-                } else {
-                    // Cập nhật Balance nếu đã tồn tại
-                    account.getBalanceEntity().setBalance(accountDTO.getBalance());
-                    balanceRepository.save(account.getBalanceEntity());  // Lưu Balance đã cập nhật
-                }
-            }
+            // Cập nhật Balance thông qua hàm tách riêng
+            balanceService.updateBalance(accountDTO, account);
 
             // Cập nhật Pin nếu có thay đổi
             if (accountDTO.getPin() != null) {
@@ -274,32 +230,6 @@ public class AccountService {
         }
     }
 
-    public Double getBalance(String accountNumber) {
-        // Lấy tài khoản đang đăng nhập
-        String loggedInAccountNumber = getLoggedInAccountNumber();
-
-        // Kiểm tra xem tài khoản yêu cầu có phải của người dùng đang đăng nhập hay không
-        if (!accountNumber.equals(loggedInAccountNumber)) {
-            throw new SecurityException("Bạn không có quyền truy cập số dư của tài khoản này.");
-        }
-
-        return accountRepository.findByAccountNumber(accountNumber)
-                .map(Account::getBalance)
-                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại."));
-    }
-
-    // Hàm lấy số tài khoản của người dùng hiện tại
-    public String getLoggedInAccountNumber() {
-        System.out.println("🔍 Kiểm tra SecurityContextHolder: " + SecurityContextHolder.getContext().getAuthentication());
-
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            System.out.println("❌ SecurityContextHolder is NULL!");
-            return null;
-        }
-
-        return (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    }
-
     // Lấy tất cả khách hàng (dành cho nhân viên ngân hàng)
     public List<Account> getAllCustomers() {
         return accountRepository.findAll();
@@ -307,4 +237,38 @@ public class AccountService {
     public String getUserRole(String accountNumber) {
         return accountRepository.findRoleByAccountNumber(accountNumber);
     }
+
+//    public void updateAccountStatus(String new_status) {
+//        // Danh sách trạng thái hợp lệ
+//        List<String> validStatuses = Arrays.asList("ACTIVE", "CLOSED", "FROZEN", "BLOCKED", "PENDING");
+//
+//        // Kiểm tra tính hợp lệ của trạng thái
+//        if (!validStatuses.contains(new_status)) {
+//            throw new IllegalArgumentException("Trạng thái không hợp lệ: " + new_status);
+//        }
+//
+//        // Cập nhật trạng thái
+//        account.setStatus(new_status);
+//        accountRepository.save(account); // Lưu vào cơ sở dữ liệu
+//
+//        System.out.println("Trạng thái tài khoản đã được cập nhật thành: " + new_status);
+//    }
+
+//    public String checkAccountStatus() {
+//        // Assume 'status' is a field in your Account class
+//        switch (account.getStatus()) {
+//            case "ACTIVE":
+//                return "The account is active.";
+//            case "CLOSED":
+//                return "The account has been closed.";
+//            case "FROZEN":
+//                return "The account is frozen.";
+//            case "BLOCKED":
+//                return "The account is blocked.";
+//            case "PENDING":
+//                return "The account is pending.";
+//            default:
+//                return "Unknown status.";
+//        }
+//    }
 }

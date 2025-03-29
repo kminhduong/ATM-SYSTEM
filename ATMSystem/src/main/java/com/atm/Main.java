@@ -74,7 +74,7 @@ public class Main {
             );
 
             Account account = adminDTO.toAccount(userRepository);
-            accountService.register(account);
+            accountService.createAccount(account);
             logger.info("Admin account has been created successfully!");
         } else {
             logger.info("Admin user already exists, skipping user creation.");

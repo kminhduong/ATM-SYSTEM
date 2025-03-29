@@ -31,6 +31,7 @@ public class TransactionService {
     private final JwtUtil jwtUtil;
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
     private final PasswordEncoder passwordEncoder;
+    private final CredentialService credentialService;
 
 
     @Autowired
@@ -38,12 +39,13 @@ public class TransactionService {
                               AccountRepository accountRepository,
                               TransactionRepository transactionRepository,
                               JwtUtil jwtUtil,
-                              PasswordEncoder passwordEncoder) {  // Inject passwordEncoder vào constructor
+                              PasswordEncoder passwordEncoder,CredentialService credentialService ) {  // Inject passwordEncoder vào constructor
         this.accountService = accountService;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;  // Gán giá trị cho passwordEncoder
+        this.credentialService=credentialService;
     }
 
     // 📌 Đăng nhập và trả về token JWT
@@ -54,7 +56,7 @@ public class TransactionService {
             Account account = accountOpt.get();
             Credential credential = account.getCredential();
 
-            if (credential != null && verifyPin(pin, credential.getPin())) {  // So sánh pin với Credential
+            if (credential != null && credentialService.validatePIN(pin, credential.getPin())) {  // So sánh pin với Credential
                 if (account.getRole() == null) {
                     account.setRole("USER");
                     accountRepository.save(account);
@@ -73,13 +75,8 @@ public class TransactionService {
         return null; // Trả về null nếu tài khoản không hợp lệ
     }
 
-    // Phương thức kiểm tra pin (sử dụng mã hóa)
-    private boolean verifyPin(String rawPin, String encodedPin) {
-        return passwordEncoder.matches(rawPin, encodedPin);  // So sánh pin nhập vào với pin đã mã hóa
-    }
-
     @Transactional
-    public ApiResponse<String> processTransaction(String token, double amount, TransactionType transactionType, String targetAccountNumber) {
+    public ApiResponse<String> recordTransaction(String token, double amount, TransactionType transactionType, String targetAccountNumber) {
         // Xác minh token và kiểm tra quyền
         String accountNumber = jwtUtil.validateToken(token);
         if (accountNumber == null) {

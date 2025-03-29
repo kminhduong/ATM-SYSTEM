@@ -4,7 +4,7 @@ Content-Type: application/json
 
 {
   "userId": "111111111111",
-  "accountNumber": "4444444444",
+  "accountNumber": "5252525252",
   "fullName": "Nguyễn Văn A",
   "username": "nguyen123",
   "phone": "0901234567",

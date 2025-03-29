@@ -98,7 +98,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.processTransaction(token, request.getAmount(), TransactionType.WITHDRAWAL, null);
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.WITHDRAWAL, null);
         return buildResponse(response);
     }
 
@@ -114,7 +114,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.processTransaction(token, request.getAmount(), TransactionType.DEPOSIT, null);
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.DEPOSIT, null);
         return buildResponse(response);
     }
 
@@ -130,7 +130,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.processTransaction(token, request.getAmount(), TransactionType.TRANSFER, request.getTargetAccountNumber());
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.TRANSFER, request.getTargetAccountNumber());
         return buildResponse(response);
     }
 
