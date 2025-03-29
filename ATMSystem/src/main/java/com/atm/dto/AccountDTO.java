@@ -25,7 +25,8 @@ public class AccountDTO {
 
     // Constructor đầy đủ
     public AccountDTO(String accountNumber, String username, String fullName, String userId,
-                      AccountType accountType, AccountStatus status, Double balance, String pin, String role) {
+                      AccountType accountType, AccountStatus status, Double balance,
+                      String pin, String role, String phoneNumber) {
         this.accountNumber = accountNumber;
         this.username = username;
         this.fullName = fullName;
@@ -35,26 +36,32 @@ public class AccountDTO {
         this.balance = balance;
         this.pin = pin;
         this.role = role;
+        this.phoneNumber = phoneNumber;
     }
 
 
     // Chuyển từ DTO thành Entity
     public Account toAccount(UserRepository userRepository) {
-        // Đảm bảo userId hợp lệ và user tồn tại, hoặc log khi không tìm thấy
         User user = (this.userId != null) ? userRepository.findById(this.userId).orElse(null) : null;
 
-        // Trả về một đối tượng Account, sử dụng giá trị mặc định khi cần thiết
-        return new Account(
-                this.accountNumber != null ? this.accountNumber : "Unknown", // Giá trị mặc định cho accountNumber
-                this.username != null ? this.username : "DefaultUsername",   // Giá trị mặc định cho username
-                this.fullName != null ? this.fullName : "Unknown Name",      // Giá trị mặc định cho fullName
-                user,  // Chuyển đổi userId thành User
-                this.accountType != null ? this.accountType : AccountType.SAVINGS,  // Giá trị mặc định cho accountType
-                this.status != null ? this.status : AccountStatus.ACTIVE,    // Giá trị mặc định cho status
-                this.balance != null ? this.balance : 0.0,  // Giá trị mặc định cho balance
-                this.pin != null ? this.pin : "000000",     // Giá trị mặc định cho pin
-                this.role != null ? this.role : "USER"       // Giá trị mặc định cho role
+        Account account = new Account(
+                this.accountNumber != null ? this.accountNumber : "Unknown",
+                this.username != null ? this.username : "DefaultUsername",
+                this.fullName != null ? this.fullName : "Unknown Name",
+                user,
+                this.accountType != null ? this.accountType : AccountType.SAVINGS,
+                this.status != null ? this.status : AccountStatus.ACTIVE,
+                this.balance != null ? this.balance : 0.0,
+                this.pin != null ? this.pin : "000000",
+                this.role != null ? this.role : "USER"
         );
+
+        // Nếu user không null, lấy phone từ User
+        if (user != null) {
+            this.phoneNumber = user.getPhone();
+        }
+
+        return account;
     }
 
     // Chuyển từ Entity thành DTO
@@ -63,16 +70,15 @@ public class AccountDTO {
                 account.getAccountNumber(),
                 account.getUsername(),
                 account.getFullName(),
-                (account.getUser() != null) ? account.getUser().getUserId() : null,  // Sửa từ getId() thành getUserId()
+                (account.getUser() != null) ? account.getUser().getUserId() : null,
                 account.getAccountType(),
                 account.getStatus(),
                 account.getBalance(),
-                (account.getCredential() != null) ? account.getCredential().getPin() : null,  // Lấy pin từ Credential
-                account.getRole()   // Include role
+                (account.getCredential() != null) ? account.getCredential().getPin() : null,
+                account.getRole(),
+                (account.getUser() != null) ? account.getUser().getPhone() : null // Lấy phone từ User
         );
     }
-
-
 
     // Getters và Setters
     public String getAccountNumber() {

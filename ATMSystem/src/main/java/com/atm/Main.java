@@ -15,6 +15,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.atm.model.AccountStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Date;
 
@@ -23,6 +24,7 @@ import java.util.Date;
 public class Main {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public static void main(String[] args) {
         try {
@@ -46,37 +48,33 @@ public class Main {
     private static void initializeAdminAccount(AccountService accountService, UserRepository userRepository) {
         logger.info("Starting admin account initialization...");
 
-        // Kiểm tra xem tài khoản admin đã tồn tại trong bảng User chưa
         User existingUser = userRepository.findByEmail("admin@example.com");
         if (existingUser == null) {
             logger.info("Admin user does not exist, proceeding to create...");
 
-            // Tạo User mới với 4 tham số: userId, name, email, phone
-            String userId = "123456789012";  // Giả sử đây là userId hợp lệ
-            User user = new User(userId, "Admin User", "admin@example.com", "1234567890");  // UUID và createAt sẽ tự động được thiết lập
-
-            // Lưu User vào cơ sở dữ liệu
-            userRepository.save(user);  // Lưu vào DB
+            String userId = "123456789012";
+            User user = new User(userId, "Admin User", "admin@example.com", "1234567890");
+            userRepository.save(user);
             logger.info("Admin user created successfully!");
 
-            // Tạo tài khoản admin mới sử dụng AccountDTO
+            // Mã hóa PIN trước khi lưu vào database
+            String hashedPin = passwordEncoder.encode("123456");
+
             AccountDTO adminDTO = new AccountDTO(
-                    "9999999999",           // accountNumber
-                    "admin",                // username
-                    "Default Admin",        // fullName
-                    user.getUserId(),       // userId từ User mới tạo
-                    AccountType.SAVINGS,    // accountType
-                    AccountStatus.ACTIVE,   // status
-                    0.0,                    // balance
-                    "123456",               // pin
-                    "ADMIN"                 // role
+                    "0000000000",
+                    "admin",
+                    "Default Admin",
+                    user.getUserId(),
+                    AccountType.SAVINGS,
+                    AccountStatus.ACTIVE,
+                    null,  // Để balance null
+                    null,  // Để pin null
+                    "ADMIN",
+                    user.getPhone()
             );
 
-            // Chuyển đổi AccountDTO thành Account entity và lưu vào cơ sở dữ liệu
-            Account account = adminDTO.toAccount(userRepository); // Truyền UserRepository vào đây
-
-            // Đăng ký tài khoản admin
-            accountService.register(account); // Gọi phương thức register để lưu tài khoản admin
+            Account account = adminDTO.toAccount(userRepository);
+            accountService.register(account);
             logger.info("Admin account has been created successfully!");
         } else {
             logger.info("Admin user already exists, skipping user creation.");

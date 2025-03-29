@@ -11,34 +11,27 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/accounts")
 public class AccountController {
 
     private final AccountService accountService;
-    private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
-    private final UserRepository userRepository; // Thêm UserRepository
-
     private final JwtUtil jwtUtil;
     private final TransactionService transactionService;
+    private final UserRepository userRepository; // 🔹 Thêm biến này
+
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountController.class);
 
     @Autowired
-    public AccountController(JwtUtil jwtUtil, AccountService accountService, UserRepository userRepository,TransactionService transactionService) {
+    public AccountController(JwtUtil jwtUtil, AccountService accountService, UserRepository userRepository, TransactionService transactionService) {
         this.jwtUtil = jwtUtil;
         this.accountService = accountService;
-        this.userRepository = userRepository;
+        this.userRepository = userRepository; // 🔹 Inject vào constructor
         this.transactionService = transactionService;
     }
 
@@ -84,109 +77,43 @@ public class AccountController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginRequest) {
-        String accountNumber = loginRequest.get("accountNumber");
-        String pin = loginRequest.get("pin");
-
-        String token = transactionService.login(accountNumber, pin);
+        String token = transactionService.login(loginRequest.get("accountNumber"), loginRequest.get("pin"));
         if (token != null) {
-            Map<String, String> response = Map.of(
-                    "message", "Login successful",
-                    "token", token
-            );
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Invalid account number or PIN."));
+            return ResponseEntity.ok(Map.of("message", "Login successful", "token", token));
         }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid account number or PIN."));
     }
 
     @PutMapping("/update")
-    public ResponseEntity<String> updateAccount(@RequestBody AccountDTO accountDTO,
-                                                @RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Bạn cần đăng nhập trước!");
-        }
-
-        String token = authHeader.substring(7);
-        String accountNumber = jwtUtil.validateToken(token); // Lấy accountNumber từ token
-
+    public ResponseEntity<String> updateAccount(@RequestBody AccountDTO accountDTO, @RequestHeader("Authorization") String authHeader) {
+        String accountNumber = jwtUtil.validateToken(authHeader.substring(7));
         if (accountNumber == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token không hợp lệ!");
         }
-
-        try {
-            accountService.updateAccount(accountDTO, accountNumber);
-            return ResponseEntity.ok("Cập nhật tài khoản thành công!");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi khi cập nhật tài khoản.");
-        }
+        accountService.updateAccount(accountDTO, accountNumber);
+        return ResponseEntity.ok("Cập nhật tài khoản thành công!");
     }
 
     @GetMapping("/balance")
     public ResponseEntity<Double> getBalance() {
-        try {
-            String loggedInAccountNumber = accountService.getLoggedInAccountNumber();
-            System.out.println("🔹 Logged in Account: " + loggedInAccountNumber);
-
-            if (loggedInAccountNumber == null) {
-                System.out.println("❌ Authentication failed! SecurityContextHolder is NULL.");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-            }
-
-            Double balance = accountService.getBalance(loggedInAccountNumber);
-            System.out.println("✅ Balance Retrieved: " + balance);
-
-            return ResponseEntity.ok(balance);
-        } catch (SecurityException e) {
-            System.out.println("❌ SecurityException: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-        }
+        String accountNumber = accountService.getLoggedInAccountNumber();
+        return accountNumber != null ? ResponseEntity.ok(accountService.getBalance(accountNumber))
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 
-    // Xem toàn bộ khách hàng (dành cho nhân viên ngân hàng)
     @GetMapping("/customers")
     public ResponseEntity<List<AccountDTO>> getAllCustomers(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-
-        String token = authHeader.substring(7); // Loại bỏ tiền tố "Bearer "
-        String accountNumber = jwtUtil.validateToken(token);
-
-        if (accountNumber != null) {
-            List<AccountDTO> customers = accountService.getAllCustomers().stream()
-                    .map(AccountDTO::fromAccount)
-                    .toList();
-            return ResponseEntity.ok(customers);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
+        String accountNumber = jwtUtil.validateToken(authHeader.substring(7));
+        return accountNumber != null ? ResponseEntity.ok(accountService.getAllCustomers().stream().map(AccountDTO::fromAccount).toList())
+                : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Bạn cần đăng nhập trước!");
-        }
-
-        String token = authHeader.substring(7);
+        String token = request.getHeader("Authorization").substring(7);
         if (jwtUtil.isTokenValid(token)) {
-            // Khi đăng xuất, tạo một token mới với thời gian hết hạn cực ngắn (1ms)
             jwtUtil.generateToken(jwtUtil.validateToken(token), "USER", 1);
         }
-
         return ResponseEntity.ok("Đăng xuất thành công!");
     }
-    @GetMapping("/check-role")
-    public ResponseEntity<String> checkRole() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        System.out.println("👤 User: " + authentication.getName());
-        System.out.println("🔐 Authorities: " + authentication.getAuthorities());
-
-        return ResponseEntity.ok("Check console for role details.");
-    }
-
 }

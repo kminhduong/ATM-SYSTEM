@@ -22,6 +22,15 @@ public class Balance {
     @JoinColumn(name = "account_number") // Liên kết với account_number trong bảng Account
     private Account account;
 
+    // No-arg constructor (Hibernate cần)
+    public Balance() {}
+
+    public Balance(Account account, double balance, LocalDateTime lastUpdated) {
+        this.account = account;
+        this.balance = balance;
+        this.lastUpdated = lastUpdated;
+    }
+
     // Getters và Setters
     public Double getBalance() {
         return balance;

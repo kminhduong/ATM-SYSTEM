@@ -28,6 +28,18 @@ public class Credential {
     @Column(name = "update_at")
     private LocalDateTime updateAt;
 
+    // No-arg constructor (Hibernate cần)
+    public Credential() {}
+
+    public Credential(Account account, String password, int failedAttempts, LocalDateTime lastLocked, LocalDateTime createdAt) {
+        this.account = account;
+        this.pin = password;
+        this.failedAttempts = failedAttempts;
+        this.lockTime = (lastLocked != null) ? lastLocked : LocalDateTime.now();
+        this.updateAt = createdAt;
+    }
+
+
     // Getters và Setters
     public String getAccountNumber() {
         return accountNumber;

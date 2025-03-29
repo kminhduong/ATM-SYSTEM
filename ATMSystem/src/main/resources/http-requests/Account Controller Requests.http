@@ -4,10 +4,10 @@ Content-Type: application/json
 
 {
   "userId": "111111111111",
-  "accountNumber": "3333333333",
+  "accountNumber": "4444444444",
   "fullName": "Nguyễn Văn A",
   "username": "nguyen123",
-  "phoneNumber": "0901234567",
+  "phone": "0901234567",
   "accountType": "SAVINGS",
   "status": "ACTIVE"
 }
@@ -21,7 +21,7 @@ POST http://localhost:8080/accounts/login
 Content-Type: application/json
 
 {
-  "accountNumber": "3333333333",
+  "accountNumber": "4444444444",
   "pin": "000000"
 }
 
@@ -41,7 +41,7 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "accountNumber": "3333333333",
+  "accountNumber": "4444444444",
   "pin": "555555",
   "balance": "100000000"
 }

@@ -1,11 +1,30 @@
 package com.atm.dto;
 
 public class WithdrawOtpRequest {
+    private String accountNumber;
     private String phoneNumber;
     private String otp;
     private double amount;
 
-    // Getters and Setters
+    // Constructor mặc định hoặc có tham số
+    public WithdrawOtpRequest() {}
+
+    public WithdrawOtpRequest(String accountNumber, String phoneNumber, String otp, double amount) {
+        this.accountNumber = accountNumber;
+        this.phoneNumber = phoneNumber;
+        this.otp = otp;
+        this.amount = amount;
+    }
+
+    // Getter và Setter cho các thuộc tính
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
     public String getPhoneNumber() {
         return phoneNumber;
     }

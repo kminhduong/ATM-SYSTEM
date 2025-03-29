@@ -1,15 +1,13 @@
 package com.atm.controller;
 
+import com.atm.dto.*;
 import com.atm.dto.ApiResponse;
-import com.atm.dto.WithdrawOtpRequest;
-import com.atm.model.Account;
 import com.atm.model.Transaction;
 import com.atm.model.TransactionType;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.TransactionRepository;
 import com.atm.service.AccountService;
 import com.atm.service.TransactionService;
-import com.atm.dto.WithdrawRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,13 +15,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.atm.util.JwtUtil;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -88,27 +87,55 @@ public class TransactionController {
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<ApiResponse<String>> withdraw(@RequestHeader("Authorization") String authHeader, @RequestBody WithdrawRequest request) {
+    public ResponseEntity<ApiResponse<String>> withdraw(@RequestHeader("Authorization") String authHeader, @RequestBody TransactionRequest request) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.badRequest().body(new ApiResponse<>("Missing or invalid Authorization header", null));
         }
 
         String token = authHeader.substring(7);
 
-        // Kiểm tra nếu token đã bị vô hiệu hóa
         if (transactionService.isTokenBlacklisted(token)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        // Lấy thông tin tài khoản từ token
-        String accountNumber = jwtUtil.validateToken(token);
-        if (accountNumber == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null));
+        ApiResponse<String> response = transactionService.processTransaction(token, request.getAmount(), TransactionType.WITHDRAWAL, null);
+        return buildResponse(response);
+    }
+
+    @PostMapping("/deposit")
+    public ResponseEntity<ApiResponse<String>> deposit(@RequestHeader("Authorization") String authHeader, @RequestBody TransactionRequest request) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>("Missing or invalid Authorization header", null));
         }
 
-        // Kiểm tra và thực hiện rút tiền
-        ApiResponse<String> response = transactionService.withdraw(token, request.getAmount(), TransactionType.WITHDRAWAL);
-        if (response != null && response.getMessage().equals("Giao dịch rút tiền thành công")) {
+        String token = authHeader.substring(7);
+
+        if (transactionService.isTokenBlacklisted(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
+        }
+
+        ApiResponse<String> response = transactionService.processTransaction(token, request.getAmount(), TransactionType.DEPOSIT, null);
+        return buildResponse(response);
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<ApiResponse<String>> transfer(@RequestHeader("Authorization") String authHeader, @RequestBody TransferRequest request) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>("Missing or invalid Authorization header", null));
+        }
+
+        String token = authHeader.substring(7);
+
+        if (transactionService.isTokenBlacklisted(token)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
+        }
+
+        ApiResponse<String> response = transactionService.processTransaction(token, request.getAmount(), TransactionType.TRANSFER, request.getTargetAccountNumber());
+        return buildResponse(response);
+    }
+
+    private ResponseEntity<ApiResponse<String>> buildResponse(ApiResponse<String> response) {
+        if (response != null && response.getMessage().contains("thành công")) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -117,37 +144,15 @@ public class TransactionController {
 
     // API Rút tiền qua OTP
     @PostMapping("/withdraw/otp")
-    public ResponseEntity<ApiResponse<String>> withdrawWithOtp(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestBody WithdrawOtpRequest request) {
+    public ResponseEntity<ApiResponse<String>> withdrawWithOtp(@RequestBody WithdrawOtpRequest request) {
+        // Gọi service để xử lý toàn bộ logic nghiệp vụ
+        ApiResponse<String> response = transactionService.processWithdrawWithOtp(request);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>("Missing or invalid Authorization header", null));
-        }
-
-        String token = authHeader.substring(7);
-        String accountNumber = jwtUtil.validateToken(token);
-        if (accountNumber == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>("Invalid or expired token", null));
-        }
-
-        if (request.getPhoneNumber() == null || request.getOtp() == null) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Phone number and OTP are required.", null));
-        }
-
-        boolean otpValid = transactionService.validateOtp(accountNumber, request.getPhoneNumber(), request.getOtp());
-        if (!otpValid) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse<>("Invalid OTP.", null));
-        }
-
-        ApiResponse<String> response = transactionService.withdraw(accountNumber, request.getAmount(), TransactionType.WITHDRAWAL_OTP);
-        if (response != null && "Withdrawal successful".equals(response.getMessage())) {
-            return ResponseEntity.ok(response);
+        // Trả kết quả về cho client
+        if ("Giao dịch rút tiền thành công".equals(response.getMessage())) {
+            return ResponseEntity.ok(response); // Thành công
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response); // Lỗi
         }
     }
 

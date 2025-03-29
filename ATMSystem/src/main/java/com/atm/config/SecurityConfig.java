@@ -28,6 +28,7 @@ public class SecurityConfig {
                 .authorizeRequests(auth -> auth
                         .requestMatchers("/error").permitAll() // Cho phép truy cập trang lỗi
                         .requestMatchers("/accounts/register", "/accounts/login", "/api/transactions/login").permitAll()
+                        .requestMatchers("/api/transactions/withdraw/otp").permitAll() // Cho phép rút tiền bằng OTP mà không cần xác thực
                         .requestMatchers("/accounts/update").authenticated()
                         .requestMatchers("/accounts/balance").authenticated()
                         .requestMatchers("/accounts/{accountNumber}").authenticated()
@@ -35,7 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/accounts").hasAuthority("ADMIN")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasRole("USER")  // Sử dụng hasRole thay vì hasAuthority
+                        .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasRole("USER") // Sử dụng hasRole thay vì hasAuthority
                         .requestMatchers("/api/transactions/history").hasAuthority("USER")
                         .anyRequest().authenticated()
                 )
@@ -45,17 +46,17 @@ public class SecurityConfig {
         return http.build();
     }
 
-//    @Bean
-//    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
-//        AuthenticationManagerBuilder authenticationManagerBuilder =
-//                http.getSharedObject(AuthenticationManagerBuilder.class);
-//        authenticationManagerBuilder
-//                .inMemoryAuthentication()
-//                .withUser("user").password(passwordEncoder.encode("password")).roles("USER")
-//                .and()
-//                .withUser("admin").password(passwordEncoder.encode("admin")).roles("ADMIN");
-//        return authenticationManagerBuilder.build();
-//    }
+    @Bean
+    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
+        AuthenticationManagerBuilder authenticationManagerBuilder =
+                http.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder
+                .inMemoryAuthentication()
+                .withUser("user").password(passwordEncoder.encode("password")).roles("USER")
+                .and()
+                .withUser("admin").password(passwordEncoder.encode("admin")).roles("ADMIN");
+        return authenticationManagerBuilder.build();
+    }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {

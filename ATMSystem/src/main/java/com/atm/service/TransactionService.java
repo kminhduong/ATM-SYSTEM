@@ -1,11 +1,13 @@
 package com.atm.service;
 
 import com.atm.dto.ApiResponse;
+import com.atm.dto.WithdrawOtpRequest;
 import com.atm.model.Credential;
 import com.atm.model.Transaction;
 import com.atm.model.Account;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.TransactionRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -76,21 +78,19 @@ public class TransactionService {
         return passwordEncoder.matches(rawPin, encodedPin);  // So sánh pin nhập vào với pin đã mã hóa
     }
 
-    public ApiResponse<String> withdraw(String token, double amount, TransactionType transactionType) {
-        // Xác minh token và lấy số tài khoản từ token
+    @Transactional
+    public ApiResponse<String> processTransaction(String token, double amount, TransactionType transactionType, String targetAccountNumber) {
+        // Xác minh token và kiểm tra quyền
         String accountNumber = jwtUtil.validateToken(token);
         if (accountNumber == null) {
-            // Token không hợp lệ hoặc hết hạn
             return new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null);
         }
 
-        // Kiểm tra quyền của người dùng từ token
         String role = jwtUtil.getRoleFromToken(token);
         if (!"USER".equals(role)) {
             return new ApiResponse<>("Bạn không có quyền thực hiện giao dịch này", null);
         }
 
-        // Lấy tài khoản từ accountService (hoặc từ DB)
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
         if (accountOpt.isEmpty()) {
             return new ApiResponse<>("Không tìm thấy tài khoản", null);
@@ -98,49 +98,155 @@ public class TransactionService {
 
         Account account = accountOpt.get();
 
-        // Kiểm tra số dư có đủ để rút tiền không
+        synchronized (account) {
+            switch (transactionType) {
+                case WITHDRAWAL:
+                    return handleWithdraw(account, amount);
+                case DEPOSIT:
+                    return handleDeposit(account, amount);
+                case TRANSFER:
+                    return handleTransfer(account, targetAccountNumber, amount);
+                default:
+                    return new ApiResponse<>("Loại giao dịch không hợp lệ", null);
+            }
+        }
+    }
+
+    private ApiResponse<String> handleWithdraw(Account account, double amount) {
         if (amount > account.getBalance()) {
             return new ApiResponse<>("Số dư không đủ để thực hiện giao dịch", null);
         }
 
-        // Trừ tiền và cập nhật tài khoản
+        account.setBalance(account.getBalance() - amount);
+        accountRepository.save(account);
+
+        // Lưu giao dịch
+        Transaction transaction = new Transaction(
+                account.getAccountNumber(),
+                amount,
+                TransactionType.WITHDRAWAL,
+                new Date()
+        );
+        try {
+            transactionRepository.save(transaction);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
+        }
+
+        return new ApiResponse<>("Rút tiền thành công", String.valueOf(account.getBalance()));
+    }
+
+    private ApiResponse<String> handleDeposit(Account account, double amount) {
+        account.setBalance(account.getBalance() + amount);
+        accountRepository.save(account);
+
+        // Lưu giao dịch
+        Transaction transaction = new Transaction(
+                account.getAccountNumber(),
+                amount,
+                TransactionType.DEPOSIT,
+                new Date()
+        );
+        try {
+            transactionRepository.save(transaction);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
+        }
+
+        return new ApiResponse<>("Nạp tiền thành công", String.valueOf(account.getBalance()));
+    }
+
+    private ApiResponse<String> handleTransfer(Account sourceAccount, String targetAccountNumber, double amount) {
+        if (amount > sourceAccount.getBalance()) {
+            return new ApiResponse<>("Số dư không đủ để thực hiện giao dịch chuyển tiền", null);
+        }
+
+        Optional<Account> targetAccountOpt = accountRepository.findByAccountNumber(targetAccountNumber);
+        if (targetAccountOpt.isEmpty()) {
+            return new ApiResponse<>("Tài khoản nhận không hợp lệ", null);
+        }
+
+        Account targetAccount = targetAccountOpt.get();
+
+        // Trừ tiền tài khoản nguồn
+        sourceAccount.setBalance(sourceAccount.getBalance() - amount);
+        accountRepository.save(sourceAccount);
+
+        // Cộng tiền tài khoản đích
+        targetAccount.setBalance(targetAccount.getBalance() + amount);
+        accountRepository.save(targetAccount);
+
+        // Lưu giao dịch tài khoản nguồn
+        Transaction transactionSource = new Transaction(
+                sourceAccount.getAccountNumber(),
+                amount,
+                TransactionType.TRANSFER,
+                new Date()
+        );
+
+        // Lưu giao dịch tài khoản đích
+        Transaction transactionTarget = new Transaction(
+                targetAccount.getAccountNumber(),
+                amount,
+                TransactionType.DEPOSIT,
+                new Date()
+        );
+
+        try {
+            transactionRepository.save(transactionSource);
+            transactionRepository.save(transactionTarget);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
+        }
+
+        return new ApiResponse<>("Chuyển tiền thành công", String.valueOf(sourceAccount.getBalance()));
+    }
+
+    public ApiResponse<String> processWithdrawWithOtp(WithdrawOtpRequest request) {
+        // 1. Kiểm tra thông tin đầu vào
+        if (request.getPhoneNumber() == null || request.getOtp() == null || request.getAccountNumber() == null) {
+            return new ApiResponse<>("Số điện thoại, OTP và số tài khoản là bắt buộc.", null);
+        }
+
+        // 2. Xác thực OTP (sử dụng mã cố định)
+        if (!"123456".equals(request.getOtp())) {
+            return new ApiResponse<>("OTP không hợp lệ. Vui lòng thử lại.", null);
+        }
+
+        // 3. Lấy tài khoản từ cơ sở dữ liệu
+        Optional<Account> accountOpt = accountRepository.findByAccountNumber(request.getAccountNumber());
+        if (accountOpt.isEmpty()) {
+            return new ApiResponse<>("Không tìm thấy tài khoản với số tài khoản đã cung cấp.", null);
+        }
+
+        Account account = accountOpt.get();
+
+        // 4. Kiểm tra số dư tài khoản
+        if (request.getAmount() > account.getBalance()) {
+            return new ApiResponse<>("Số dư không đủ để thực hiện giao dịch.", null);
+        }
+
+        // 5. Trừ tiền và cập nhật tài khoản
         synchronized (account) {
-            account.setBalance(account.getBalance() - amount);
+            account.setBalance(account.getBalance() - request.getAmount());
             account.setLastUpdated(LocalDateTime.now());
             accountRepository.save(account);
         }
 
-        // Lưu giao dịch
-        Transaction transaction = new Transaction(accountNumber, amount, transactionType, new Date());
+        // 6. Lưu thông tin giao dịch vào cơ sở dữ liệu
+        Transaction transaction = new Transaction(
+                request.getAccountNumber(),
+                request.getAmount(),
+                TransactionType.WITHDRAWAL_OTP, // Truyền trực tiếp giá trị enum
+                new Date()
+        );
         transactionRepository.save(transaction);
 
-        // Giao dịch thành công, trả về thông báo và số dư dưới dạng String
-        return new ApiResponse<>("Giao dịch rút tiền thành công", String.valueOf(account.getBalance()));
-    }
-
-    // 📌 Rút tiền qua OTP
-    public boolean withdrawWithOtp(String accountNumber, String phoneNumber, double amount, TransactionType transactionType) {
-        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
-        if (accountOpt.isEmpty()) return false;
-
-        Account account = accountOpt.get();
-        if (amount > account.getBalance()) return false;
-
-        // Trừ tiền và cập nhật tài khoản
-        account.setBalance(account.getBalance() - amount);
-        account.setLastUpdated(LocalDateTime.now());
-        accountRepository.save(account);
-
-        // Lưu giao dịch
-        Transaction transaction = new Transaction(accountNumber, amount, transactionType, new Date());
-        transactionRepository.save(transaction);
-        return true;
-    }
-
-    // 📌 Xác thực OTP (Giả lập - nên dùng dịch vụ OTP thực tế)
-    public boolean validateOtp(String accountNumber, String phoneNumber, String otp) {
-        // Thêm logic kiểm tra accountNumber và phoneNumber nếu cần
-        return "123456".equals(otp);  // Tạm thời hard-code, nên thay thế bằng giải pháp OTP thực tế
+        // 7. Trả kết quả giao dịch thành công
+        return new ApiResponse<>("Giao dịch rút tiền thành công.", String.valueOf(account.getBalance()));
     }
 
     // 📌 Xem lịch sử giao dịch
