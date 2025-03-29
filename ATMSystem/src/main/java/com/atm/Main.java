@@ -51,30 +51,31 @@ public class Main {
         if (existingUser == null) {
             logger.info("Admin user does not exist, proceeding to create...");
 
-            // Tạo User mới với 3 tham số: name, email, phone
-            User user = new User("Admin User", "admin@example.com", "1234567890");  // UUID và createAt sẽ tự động được thiết lập
+            // Tạo User mới với 4 tham số: userId, name, email, phone
+            String userId = "123456789012";  // Giả sử đây là userId hợp lệ
+            User user = new User(userId, "Admin User", "admin@example.com", "1234567890");  // UUID và createAt sẽ tự động được thiết lập
 
             // Lưu User vào cơ sở dữ liệu
             userRepository.save(user);  // Lưu vào DB
             logger.info("Admin user created successfully!");
 
-            // Tạo tài khoản admin mới
-            AccountDTO admin = new AccountDTO(
+            // Tạo tài khoản admin mới sử dụng AccountDTO
+            AccountDTO adminDTO = new AccountDTO(
                     "9999999999",           // accountNumber
                     "admin",                // username
-                    "secureAdminPass",      // password
                     "Default Admin",        // fullName
                     user.getUserId(),       // userId từ User mới tạo
                     AccountType.SAVINGS,    // accountType
                     AccountStatus.ACTIVE,   // status
                     0.0,                    // balance
-                    "1234",                 // pin
+                    "123456",               // pin
                     "ADMIN"                 // role
             );
 
-            // Chuyển đổi DTO thành Entity và lưu vào cơ sở dữ liệu
-            Account account = admin.toAccount(userRepository); // Truyền UserRepository vào đây
+            // Chuyển đổi AccountDTO thành Account entity và lưu vào cơ sở dữ liệu
+            Account account = adminDTO.toAccount(userRepository); // Truyền UserRepository vào đây
 
+            // Đăng ký tài khoản admin
             accountService.register(account); // Gọi phương thức register để lưu tài khoản admin
             logger.info("Admin account has been created successfully!");
         } else {

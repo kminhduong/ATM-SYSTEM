@@ -14,7 +14,7 @@ public class UserService {
 
     @Transactional
     public User getUserById(String userId) {
-        return userRepository.findByIdWithAccounts(userId)
+        return userRepository.findUserWithAccountsByUserId(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id " + userId));
     }
 }

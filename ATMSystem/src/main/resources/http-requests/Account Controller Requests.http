@@ -3,16 +3,15 @@ POST http://localhost:8080/accounts/register
 Content-Type: application/json
 
 {
-  "accountNumber": "44444444444",
-  "username": "chanhn",
-  "password": "hong",
-  "fullName": "chanh",
+  "userId": "111111111111",
+  "accountNumber": "3333333333",
+  "fullName": "Nguyễn Văn A",
+  "username": "nguyen123",
+  "phoneNumber": "0901234567",
   "accountType": "SAVINGS",
-  "status": "ACTIVE",
-  "user": {
-    "id": "3333"
-  }
+  "status": "ACTIVE"
 }
+
 
 
 ###
@@ -22,8 +21,8 @@ POST http://localhost:8080/accounts/login
 Content-Type: application/json
 
 {
-  "accountNumber": "44444444444",
-  "password": "hong"
+  "accountNumber": "3333333333",
+  "pin": "000000"
 }
 
 > {% client.global.set("authToken", response.body.token); %}
@@ -42,7 +41,7 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "accountNumber": "44444444444",
+  "accountNumber": "3333333333",
   "pin": "555555",
   "balance": "100000000"
 }
@@ -56,7 +55,7 @@ Authorization: Bearer {{authToken}}
 ###
 
 # 📝 Get Account by Number (Lấy tài khoản theo số)
-GET http://localhost:8080/accounts/0147258369
+GET http://localhost:8080/accounts/3333333333
 Authorization: Bearer {{authToken}}
 
 ###

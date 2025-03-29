@@ -10,7 +10,6 @@ public class AccountDTO {
 
     private String accountNumber;
     private String username;
-    private String password;
     private String fullName;
     private String userId;
     private AccountType accountType;
@@ -25,11 +24,10 @@ public class AccountDTO {
     }
 
     // Constructor đầy đủ
-    public AccountDTO(String accountNumber, String username, String password, String fullName, String userId,
+    public AccountDTO(String accountNumber, String username, String fullName, String userId,
                       AccountType accountType, AccountStatus status, Double balance, String pin, String role) {
         this.accountNumber = accountNumber;
         this.username = username;
-        this.password = password;
         this.fullName = fullName;
         this.userId = userId;
         this.accountType = accountType;
@@ -42,19 +40,20 @@ public class AccountDTO {
 
     // Chuyển từ DTO thành Entity
     public Account toAccount(UserRepository userRepository) {
+        // Đảm bảo userId hợp lệ và user tồn tại, hoặc log khi không tìm thấy
         User user = (this.userId != null) ? userRepository.findById(this.userId).orElse(null) : null;
 
+        // Trả về một đối tượng Account, sử dụng giá trị mặc định khi cần thiết
         return new Account(
-                this.accountNumber != null ? this.accountNumber : "Unknown",
-                this.username != null ? this.username : "DefaultUsername",
-                this.password != null ? this.password : "DefaultPassword",
-                this.fullName != null ? this.fullName : "Unknown Name",
+                this.accountNumber != null ? this.accountNumber : "Unknown", // Giá trị mặc định cho accountNumber
+                this.username != null ? this.username : "DefaultUsername",   // Giá trị mặc định cho username
+                this.fullName != null ? this.fullName : "Unknown Name",      // Giá trị mặc định cho fullName
                 user,  // Chuyển đổi userId thành User
-                this.accountType != null ? this.accountType : AccountType.SAVINGS,
-                this.status != null ? this.status : AccountStatus.ACTIVE,
-                0.0, // Số dư mặc định
-                "000000", // PIN mặc định
-                this.role
+                this.accountType != null ? this.accountType : AccountType.SAVINGS,  // Giá trị mặc định cho accountType
+                this.status != null ? this.status : AccountStatus.ACTIVE,    // Giá trị mặc định cho status
+                this.balance != null ? this.balance : 0.0,  // Giá trị mặc định cho balance
+                this.pin != null ? this.pin : "000000",     // Giá trị mặc định cho pin
+                this.role != null ? this.role : "USER"       // Giá trị mặc định cho role
         );
     }
 
@@ -63,7 +62,6 @@ public class AccountDTO {
         return new AccountDTO(
                 account.getAccountNumber(),
                 account.getUsername(),
-                account.getPassword(),
                 account.getFullName(),
                 (account.getUser() != null) ? account.getUser().getUserId() : null,  // Sửa từ getId() thành getUserId()
                 account.getAccountType(),
@@ -91,14 +89,6 @@ public class AccountDTO {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getFullName() {

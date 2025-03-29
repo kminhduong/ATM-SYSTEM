@@ -2,17 +2,18 @@ package com.atm.model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.Pattern;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "user")
 public class User {
 
     @Id
-    @Column(name = "user_id", length = 50, updatable = false, nullable = false)
-    private String userId;  // Sử dụng String cho userId
+    @Column(name = "user_id", length = 12, updatable = false, nullable = false, unique = true)
+    @Pattern(regexp = "\\d{12}", message = "userId phải là 12 số (CCCD)")
+    private String userId; // Ràng buộc userId phải là 12 chữ số (CCCD)
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
@@ -30,21 +31,29 @@ public class User {
     @JsonIgnore
     private List<Account> accounts;
 
-    // ✅ No-arg constructor (Hibernate cần)
+    // No-arg constructor (Hibernate cần)
     public User() {}
 
-    // ✅ Constructor tự động tạo userId
-    public User(String name, String email, String phone) {
-        this.userId = UUID.randomUUID().toString();  // Tạo userId tự động
-        this.name = name;
+    // Constructor yêu cầu nhập userId
+    public User(String userId, String name, String email, String phone) {
+        this.setUserId(userId);  // Sử dụng setter để kiểm tra userId có phải là 12 số không
+        this.name = name.toUpperCase();  // Chuyển tên thành chữ in hoa
         this.email = email;
         this.phone = phone;
         this.createAt = LocalDateTime.now();
     }
 
-    // ✅ Getters và Setters
+    // Getter và Setter
     public String getUserId() {
         return userId;
+    }
+
+    public void setUserId(String userId) {
+        // Kiểm tra userId có phải là CCCD với 12 số không
+        if (userId != null && !userId.matches("\\d{12}")) {
+            throw new IllegalArgumentException("userId phải là 12 số (CCCD)");
+        }
+        this.userId = userId;
     }
 
     public String getName() {
@@ -52,7 +61,8 @@ public class User {
     }
 
     public void setName(String name) {
-        this.name = name;
+        // Đảm bảo tên viết in hoa
+        this.name = name.toUpperCase();
     }
 
     public String getEmail() {

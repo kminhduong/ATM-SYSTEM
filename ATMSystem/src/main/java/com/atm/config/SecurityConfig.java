@@ -45,17 +45,17 @@ public class SecurityConfig {
         return http.build();
     }
 
-    @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder =
-                http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder
-                .inMemoryAuthentication()
-                .withUser("user").password(passwordEncoder.encode("password")).roles("USER")
-                .and()
-                .withUser("admin").password(passwordEncoder.encode("admin")).roles("ADMIN");
-        return authenticationManagerBuilder.build();
-    }
+//    @Bean
+//    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder) throws Exception {
+//        AuthenticationManagerBuilder authenticationManagerBuilder =
+//                http.getSharedObject(AuthenticationManagerBuilder.class);
+//        authenticationManagerBuilder
+//                .inMemoryAuthentication()
+//                .withUser("user").password(passwordEncoder.encode("password")).roles("USER")
+//                .and()
+//                .withUser("admin").password(passwordEncoder.encode("admin")).roles("ADMIN");
+//        return authenticationManagerBuilder.build();
+//    }
 
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {

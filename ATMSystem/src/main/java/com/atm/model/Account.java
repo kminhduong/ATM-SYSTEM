@@ -18,9 +18,6 @@ public class Account {
     @Column(name = "username", length = 50, nullable = false, unique = true)
     private String username;
 
-    @Column(name = "password", nullable = false)
-    private String password;
-
     @Column(name = "full_name", length = 100, nullable = false)
     private String fullName;
 
@@ -29,7 +26,7 @@ public class Account {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "account_type")
+    @Column(name = "account_type", nullable = false)
     private AccountType accountType;
 
     @Enumerated(EnumType.STRING)
@@ -42,23 +39,22 @@ public class Account {
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
 
-    @Column(nullable = false)
-    private String role;
+    @Column
+    private String role;  // Không ràng buộc, có thể NULL
 
     // ✅ Constructor không tham số (BẮT BUỘC cho JPA)
     public Account() {}
 
     // ✅ Constructor đầy đủ
-    public Account(String accountNumber, String username, String password, String fullName, User user, AccountType accountType, AccountStatus status, double balance, String pin, String role) {
+    public Account(String accountNumber, String username, String fullName, User user, AccountType accountType, AccountStatus status, double balance, String pin, String role) {
         this.accountNumber = accountNumber;
         this.username = username;
-        this.password = password;
         this.fullName = fullName;
         this.user = user; // ✅ Sửa lại từ userId thành user
         this.accountType = accountType;
         this.status = status;
         this.lastUpdated = LocalDateTime.now();
-        this.role = role;
+        this.role = role;  // Có thể NULL
     }
 
     // ✅ Getter & Setter sửa lại
@@ -98,14 +94,6 @@ public class Account {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getFullName() {
         return fullName;
     }
@@ -119,8 +107,11 @@ public class Account {
     }
 
     public void setAccountType(String type) {
-        // Chuyển chuỗi thành Enum
-        this.accountType = AccountType.valueOf(type);  // Chuyển từ String thành Enum
+        try {
+            this.accountType = AccountType.valueOf(type);  // Chuyển từ String thành Enum
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid account type: " + type);
+        }
     }
 
     public AccountStatus getStatus() {
@@ -164,6 +155,6 @@ public class Account {
     }
 
     public void setRole(String role) {
-        this.role = role;
+        this.role = role;  // Có thể NULL
     }
 }

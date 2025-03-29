@@ -50,17 +50,6 @@ public class TransactionController {
         this.jwtUtil = jwtUtil;
     }
 
-    // ThreadLocal để đảm bảo mỗi luồng có một currentUser riêng
-//    private static final ThreadLocal<Account> currentUser = new ThreadLocal<>();
-
-    // Lấy user đang đăng nhập trong luồng hiện tại
-//    private Account getCurrentUser() {
-//        Account user = currentUser.get();
-//        if (user == null) {
-//            throw new RuntimeException("User not logged in");
-//        }
-//        return user;
-//    }
     private String getCurrentAccountNumber(String token) {
         return jwtUtil.validateToken(token); // Trả về accountNumber từ token
     }
@@ -96,33 +85,6 @@ public class TransactionController {
         }
 
         return ResponseEntity.badRequest().body("Invalid token.");
-    }
-
-    public ApiResponse<String> withdraw(String token, double amount, TransactionType transactionType) {
-        String accountNumber = jwtUtil.validateToken(token);
-        if (accountNumber == null) {
-            return new ApiResponse<>("Invalid or expired token", null);
-        }
-
-        Account account = accountService.getAccount(accountNumber);
-        if (account == null) {
-            return new ApiResponse<>("Account not found", null);
-        }
-
-        if (amount > account.getBalance()) {
-            return new ApiResponse<>("Insufficient funds", null);
-        }
-
-        synchronized (account) {
-            account.setBalance(account.getBalance() - amount);
-            account.setLastUpdated(LocalDateTime.now());
-            accountRepository.save(account);
-        }
-
-        Transaction transaction = new Transaction(accountNumber, amount, transactionType, new Date());
-        transactionRepository.save(transaction);
-
-        return new ApiResponse<>("Withdraw successful.", null);
     }
 
     @PostMapping("/withdraw")
