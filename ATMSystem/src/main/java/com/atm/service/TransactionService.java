@@ -249,9 +249,27 @@ public class TransactionService {
         return new ApiResponse<>("Giao dịch rút tiền thành công.", String.valueOf(account.getBalance()));
     }
 
-    // 📌 Xem lịch sử giao dịch
     public ApiResponse<List<Transaction>> getTransactionHistory(String accountNumber) {
-        List<Transaction> transactions = transactionRepository.findByAccountNumber(accountNumber);
+        // 1. Kiểm tra tham số đầu vào
+        if (accountNumber == null || accountNumber.isEmpty()) {
+            return new ApiResponse<>("Số tài khoản không được để trống", null);
+        }
+
+        // 2. Lấy lịch sử giao dịch từ cơ sở dữ liệu
+        List<Transaction> transactions;
+        try {
+            transactions = transactionRepository.findByAccountNumber(accountNumber);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ApiResponse<>("Lỗi khi truy xuất lịch sử giao dịch", null);
+        }
+
+        // 3. Kiểm tra nếu không có giao dịch nào
+        if (transactions.isEmpty()) {
+            return new ApiResponse<>("Không tìm thấy lịch sử giao dịch nào cho tài khoản này", transactions);
+        }
+
+        // 4. Trả kết quả
         return new ApiResponse<>("Lịch sử giao dịch", transactions);
     }
 

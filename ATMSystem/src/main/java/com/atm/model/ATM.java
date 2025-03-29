@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @Entity
-@Table(name = "atm") // Tránh lỗi từ khóa SQL
+@Table(name = "atm")
 public class ATM {
 
     @Id

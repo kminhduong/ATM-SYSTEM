@@ -158,15 +158,19 @@ public class TransactionController {
 
     // API Lấy lịch sử giao dịch
     @GetMapping("/history")
-    public ResponseEntity<ApiResponse<List<Transaction>>> getTransactionHistory(@RequestParam("token") String token) {
-        log.debug("Token nhận được: {}", token);
-
-        String accountNumber = jwtUtil.validateToken(token);
-        if (accountNumber == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null));
+    public ResponseEntity<ApiResponse<List<Transaction>>> getTransactionHistory(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>("Missing or invalid Authorization header", null));
         }
 
-        return ResponseEntity.ok(transactionService.getTransactionHistory(accountNumber));
+        String token = authHeader.substring(7);
+        String accountNumber = jwtUtil.validateToken(token);
+
+        if (accountNumber == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null));
+        }
+
+        ApiResponse<List<Transaction>> response = transactionService.getTransactionHistory(accountNumber);
+        return ResponseEntity.ok(response);
     }
 }

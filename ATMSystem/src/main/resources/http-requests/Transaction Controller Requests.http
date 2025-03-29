@@ -55,7 +55,9 @@ Content-Type: application/json
 ###
 
 ### 📝 Get Transaction History (Lấy lịch sử giao dịch)
-GET http://localhost:8080/api/transactions/history?token={{authToken}}
+GET http://localhost:8080/api/transactions/history
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
 
 ###

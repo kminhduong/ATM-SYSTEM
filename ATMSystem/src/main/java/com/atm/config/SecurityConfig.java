@@ -37,7 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasRole("USER") // Sử dụng hasRole thay vì hasAuthority
-                        .requestMatchers("/api/transactions/history").hasAuthority("USER")
+                        .requestMatchers("/api/transactions/history").hasRole("USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Thêm bộ lọc JWT

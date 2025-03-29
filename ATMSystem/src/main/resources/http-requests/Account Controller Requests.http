@@ -22,7 +22,7 @@ Content-Type: application/json
 
 {
   "accountNumber": "4444444444",
-  "pin": "000000"
+  "pin": "555555"
 }
 
 > {% client.global.set("authToken", response.body.token); %}

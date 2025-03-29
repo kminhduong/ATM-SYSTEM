@@ -39,7 +39,6 @@ public class Credential {
         this.updateAt = createdAt;
     }
 
-
     // Getters và Setters
     public String getAccountNumber() {
         return accountNumber;
