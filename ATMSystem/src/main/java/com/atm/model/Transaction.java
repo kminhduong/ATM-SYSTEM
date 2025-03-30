@@ -1,10 +1,12 @@
 package com.atm.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+
 import java.util.Date;
 
 @Entity
-@Table(name = "Transaction") // Đúng với tên bảng trong MySQL
+@Table(name = "transaction")
 public class Transaction {
 
     @Id
@@ -15,6 +17,7 @@ public class Transaction {
     private String atmId;
 
     @Column(name = "account_number", length = 50, nullable = false)
+    @NotNull(message = "Account number is mandatory")
     private String accountNumber;
 
     @Enumerated(EnumType.STRING)
@@ -82,13 +85,11 @@ public class Transaction {
 
     // ✅ Ràng buộc cho type
     public void setType(String type) {
-        for (TransactionType t : TransactionType.values()) {
-            if (t.name().equalsIgnoreCase(type)) {
-                this.type = t;
-                return;
-            }
+        if (type != null) {
+            this.type = TransactionType.fromString(type);
+        } else {
+            throw new IllegalArgumentException("Transaction type cannot be null");
         }
-        throw new IllegalArgumentException("Invalid transaction type: " + type);
     }
 
     public double getAmount() {

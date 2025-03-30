@@ -3,7 +3,7 @@ POST http://localhost:8080/api/transactions/login
 Content-Type: application/json
 
 {
-  "accountNumber": "4444444444",
+  "accountNumber": "11111",
   "pin": "555555"
 }
 
@@ -17,20 +17,29 @@ Authorization: Bearer {{authToken}}  // Thay <your_generated_jwt_token> bằng {
 Content-Type: application/json
 
 {
-  "amount": 5000000
+  "amount": 50000000
 }
 ###
 
 ### 📝 Withdraw with OTP (Rút tiền qua OTP)
-POST http://localhost:8080/api/transactions/withdraw/otp
+POST http://localhost:8080/api/transactions/send-otp
 Content-Type: application/json
 
 {
-  "accountNumber": "4444444444",
-  "phoneNumber": "0901234567",
+  "accountNumber": "11111"
+}
+
+###
+POST http://localhost:8080/api/transactions/process-with-otp
+Content-Type: application/json
+
+{
+  "accountNumber": "11111",
   "amount": 50,
   "otp": "123456"
 }
+
+####
 
 ###
 ### 📝 Nạp tiền (Rút tiền)
@@ -52,6 +61,12 @@ Content-Type: application/json
   "amount": 500000,
   "targetAccountNumber": "0000000000"
 }
+###
+
+# 📝 Get Balance (Kiểm tra số dư)
+GET http://localhost:8080/accounts/balance
+Authorization: Bearer {{authToken}}
+
 ###
 
 ### 📝 Get Transaction History (Lấy lịch sử giao dịch)

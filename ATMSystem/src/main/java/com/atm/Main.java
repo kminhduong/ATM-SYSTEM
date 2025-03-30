@@ -70,7 +70,8 @@ public class Main {
                     null,  // Để balance null
                     null,  // Để pin null
                     "ADMIN",
-                    user.getPhone()
+                    user.getPhone(),
+                    user.getEmail()
             );
 
             Account account = adminDTO.toAccount(userRepository);

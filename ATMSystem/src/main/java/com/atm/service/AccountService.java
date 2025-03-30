@@ -1,14 +1,11 @@
 package com.atm.service;
 
 import com.atm.dto.AccountDTO;
-import com.atm.model.Account;
-import com.atm.model.Credential;
-import com.atm.model.User;
+import com.atm.model.*;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.BalanceRepository;
 import com.atm.repository.CredentialRepository;
 import com.atm.repository.UserRepository;
-import com.atm.model.Balance;
 import com.atm.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,13 +128,6 @@ public class AccountService {
         return savedAccount;
     }
 
-    // Kiểm tra user có tồn tại không
-//    public boolean isUserExists(String userId) {
-//        String sql = "SELECT COUNT(*) FROM user WHERE user_id = ?";
-//        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
-//        return count != null && count > 0;
-//    }
-
     @Transactional
     public void updateAccount(AccountDTO accountDTO, String accountNumber) {
         Optional<Account> optionalAccount = accountRepository.findById(accountDTO.getAccountNumber());
@@ -155,8 +145,7 @@ public class AccountService {
         updateAccountDetails(account, accountDTO);
 
         // Cập nhật số dư
-        balanceService.updateBalance(accountDTO, account);
-
+        balanceService.updateBalance(accountDTO, account, TransactionType.DEPOSIT);
         // Cập nhật thông tin bảo mật (Credential)
         if (accountDTO.getPin() != null) {
             credentialService.changePIN(accountDTO);
@@ -242,5 +231,11 @@ public class AccountService {
 //            default:
 //                return "Unknown status.";
 //        }
+//    }
+    // Kiểm tra user có tồn tại không
+//    public boolean isUserExists(String userId) {
+//        String sql = "SELECT COUNT(*) FROM user WHERE user_id = ?";
+//        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
+//        return count != null && count > 0;
 //    }
 }

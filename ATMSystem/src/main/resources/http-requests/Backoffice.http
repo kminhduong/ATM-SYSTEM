@@ -4,15 +4,14 @@ Content-Type: application/json
 
 {
   "userId": "111111111111",
-  "accountNumber": "22222",
-  "fullName": "Nguyễn Văn A",
+  "accountNumber": "11111",
+  "fullName": "Nguyễn Văn D",
   "username": "nguyen123",
   "phone": "0901234567",
+  "email": "sugahong0107@gmail.com",
   "accountType": "SAVINGS",
   "status": "ACTIVE"
 }
-
-
 
 ###
 
@@ -41,7 +40,7 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "accountNumber": "22222",
+  "accountNumber": "11111",
   "pin": "555555",
   "balance": "100000000"
 }
@@ -56,12 +55,6 @@ Authorization: Bearer {{authToken}}
 
 # 📝 Get Account by Number (Lấy tài khoản theo số)
 GET http://localhost:8080/accounts/3333333333
-Authorization: Bearer {{authToken}}
-
-###
-
-# 📝 Get Balance (Kiểm tra số dư)
-GET http://localhost:8080/accounts/balance
 Authorization: Bearer {{authToken}}
 
 ###

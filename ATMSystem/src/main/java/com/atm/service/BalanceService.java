@@ -5,11 +5,14 @@ import com.atm.model.Account;
 import com.atm.model.Balance;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.BalanceRepository;
+import com.atm.model.TransactionType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+
+import static com.atm.model.TransactionType.*;
 
 @Service
 public class BalanceService {
@@ -36,22 +39,60 @@ public class BalanceService {
                 .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại."));
     }
 
-    public void updateBalance(AccountDTO accountDTO, Account account) {
-        if (accountDTO.getBalance() != null) {
-            if (account.getBalanceEntity() == null) {
-                // Nếu chưa có Balance, tạo mới
-                Balance newBalance = new Balance();
-                newBalance.setBalance(accountDTO.getBalance()); // Cập nhật số dư mới
-                newBalance.setAccount(account); // Liên kết Balance với Account
-                account.setBalanceEntity(newBalance); // Gắn Balance vào Account
-                balanceRepository.save(newBalance); // Lưu Balance mới vào cơ sở dữ liệu
-            } else {
-                // Nếu đã có Balance, chỉ cập nhật giá trị số dư
-                Balance existingBalance = account.getBalanceEntity();
-                existingBalance.setBalance(accountDTO.getBalance());
-                balanceRepository.save(existingBalance); // Lưu Balance đã cập nhật
-            }
+    public void updateBalance(AccountDTO accountDTO, Account account, TransactionType transactionType) {
+        // Kiểm tra nếu số dư mới không tồn tại hoặc không hợp lệ
+        if (accountDTO.getBalance() == null || accountDTO.getBalance() <= 0) {
+            throw new IllegalArgumentException("Số dư phải lớn hơn 0.");
         }
+
+        // Kiểm tra nếu Balance chưa tồn tại
+        Balance balance = account.getBalanceEntity();
+        if (balance == null) {
+            // Sử dụng hàm createBalance để tạo Balance mới
+            createBalance(account);
+            balance = account.getBalanceEntity(); // Lấy Balance vừa tạo
+        }
+
+        // Lấy số dư hiện tại và chuẩn bị cập nhật
+        double currentBalance = balance.getBalance();
+        double updatedBalance = currentBalance;
+
+        // Xử lý logic dựa trên loại giao dịch
+        switch (transactionType) {
+            case DEPOSIT:
+                // Nạp tiền
+                updatedBalance += accountDTO.getBalance();
+                break;
+
+            case WITHDRAWAL:
+                // Rút tiền
+                if (currentBalance < accountDTO.getBalance()) {
+                    throw new IllegalArgumentException("Số dư không đủ để thực hiện giao dịch rút tiền.");
+                }
+                updatedBalance -= accountDTO.getBalance();
+                break;
+
+            case WITHDRAWAL_OTP:
+                // Rút tiền OTP
+                if (currentBalance < accountDTO.getBalance()) {
+                    throw new IllegalArgumentException("Số dư không đủ để thực hiện giao dịch rút tiền OTP.");
+                }
+                updatedBalance -= accountDTO.getBalance();
+                // Logic bổ sung như xác thực OTP có thể được thêm tại đây
+                break;
+
+            case TRANSFER:
+                // Logic chuyển khoản cần được xử lý riêng
+                throw new UnsupportedOperationException("Chức năng chuyển khoản cần xử lý riêng cho tài khoản nguồn và đích.");
+
+            default:
+                throw new IllegalArgumentException("Loại giao dịch không hợp lệ.");
+        }
+
+        // Cập nhật số dư mới
+        balance.setBalance(updatedBalance);
+        balance.setLastUpdated(LocalDateTime.now()); // Cập nhật thời gian sửa đổi
+        balanceRepository.save(balance); // Lưu vào cơ sở dữ liệu
     }
 
     // Hàm lấy số tài khoản của người dùng hiện tại

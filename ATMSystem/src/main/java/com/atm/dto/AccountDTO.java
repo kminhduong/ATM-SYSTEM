@@ -17,7 +17,8 @@ public class AccountDTO {
     private Double balance;
     private String pin;
     private String role;
-    private String phoneNumber;
+    private String phone;
+    private String email;
 
     // Constructor không tham số
     public AccountDTO() {
@@ -26,7 +27,7 @@ public class AccountDTO {
     // Constructor đầy đủ
     public AccountDTO(String accountNumber, String username, String fullName, String userId,
                       AccountType accountType, AccountStatus status, Double balance,
-                      String pin, String role, String phoneNumber) {
+                      String pin, String role, String phone, String email) {
         this.accountNumber = accountNumber;
         this.username = username;
         this.fullName = fullName;
@@ -36,7 +37,8 @@ public class AccountDTO {
         this.balance = balance;
         this.pin = pin;
         this.role = role;
-        this.phoneNumber = phoneNumber;
+        this.phone = phone;
+        this.email = email;
     }
 
 
@@ -56,9 +58,10 @@ public class AccountDTO {
                 this.role != null ? this.role : "USER"
         );
 
-        // Nếu user không null, lấy phone từ User
+        // Nếu user không null, lấy phone và email từ User
         if (user != null) {
-            this.phoneNumber = user.getPhone();
+            this.phone = user.getPhone();
+            this.email = user.getEmail();
         }
 
         return account;
@@ -76,7 +79,8 @@ public class AccountDTO {
                 account.getBalance(),
                 (account.getCredential() != null) ? account.getCredential().getPin() : null,
                 account.getRole(),
-                (account.getUser() != null) ? account.getUser().getPhone() : null // Lấy phone từ User
+                (account.getUser() != null) ? account.getUser().getPhone() : null, // Lấy phone từ User
+                (account.getUser() != null) ? account.getUser().getEmail() : null  // Lấy email từ User
         );
     }
 
@@ -151,11 +155,19 @@ public class AccountDTO {
         this.role = role;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    // Getter và Setter cho phone
+    public String getPhone() {
+        return phone;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

@@ -2,16 +2,16 @@ package com.atm.dto;
 
 public class WithdrawOtpRequest {
     private String accountNumber;
-    private String phoneNumber;
+//    private String phoneNumber;
     private String otp;
-    private double amount;
+    private Double amount;
 
     // Constructor mặc định hoặc có tham số
     public WithdrawOtpRequest() {}
 
     public WithdrawOtpRequest(String accountNumber, String phoneNumber, String otp, double amount) {
         this.accountNumber = accountNumber;
-        this.phoneNumber = phoneNumber;
+//        this.phoneNumber = phoneNumber;
         this.otp = otp;
         this.amount = amount;
     }
@@ -25,13 +25,13 @@ public class WithdrawOtpRequest {
         this.accountNumber = accountNumber;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
+//    public String getPhoneNumber() {
+//        return phoneNumber;
+//    }
+//
+//    public void setPhoneNumber(String phoneNumber) {
+//        this.phoneNumber = phoneNumber;
+//    }
 
     public String getOtp() {
         return otp;
@@ -41,11 +41,11 @@ public class WithdrawOtpRequest {
         this.otp = otp;
     }
 
-    public double getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 }

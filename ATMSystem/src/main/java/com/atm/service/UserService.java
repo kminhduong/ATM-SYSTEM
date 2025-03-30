@@ -51,23 +51,54 @@ public class UserService {
             throw new IllegalArgumentException("Họ tên là bắt buộc.");
         }
 
-        // Kiểm tra trong cơ sở dữ liệu
-        String sqlCheck = "SELECT user_id FROM `User` WHERE user_id = ?";
-        String existingUserId = null;
-        try {
-            existingUserId = jdbcTemplate.queryForObject(sqlCheck, String.class, userId);
-        } catch (EmptyResultDataAccessException e) {
-            // Không tìm thấy, tiếp tục tạo mới
+        String phone = accountDTO.getPhone(); // Lấy thông tin số điện thoại
+        if (phone == null || phone.isEmpty()) {
+            logger.error("Phone is required for user registration.");
+            throw new IllegalArgumentException("Số điện thoại là bắt buộc.");
         }
 
-        if (existingUserId != null) {
-            logger.info("User already exists with ID: {}", existingUserId);
-            return false; // Người dùng đã tồn tại
+        String email = accountDTO.getEmail(); // Lấy thông tin email
+        if (email == null || email.isEmpty()) {
+            logger.error("Email is required for user registration.");
+            throw new IllegalArgumentException("Email là bắt buộc.");
+        }
+
+        // Kiểm tra trong cơ sở dữ liệu
+//        String sqlCheck = "SELECT user_id FROM `User` WHERE user_id = ?";
+//        String existingUserId = null;
+//        try {
+//            existingUserId = jdbcTemplate.queryForObject(sqlCheck, String.class, userId);
+//        } catch (EmptyResultDataAccessException e) {
+//            // Không tìm thấy, tiếp tục tạo mới
+//        }
+//
+//        if (existingUserId != null) {
+//            logger.info("User already exists with ID: {}", existingUserId);
+//            return false; // Người dùng đã tồn tại
+//        }
+
+        // Kiểm tra trong cơ sở dữ liệu dựa trên userId
+        String sqlCheck = "SELECT name FROM `User` WHERE user_id = ?";
+        String existingName = null;
+        try {
+            existingName = jdbcTemplate.queryForObject(sqlCheck, String.class, userId);
+        } catch (EmptyResultDataAccessException e) {
+            // Không tìm thấy userId, tiếp tục tạo mới
+        }
+
+        if (existingName != null) {
+            // Kiểm tra nếu tên không khớp
+            if (!existingName.equals(fullName)) {
+                logger.error("User ID: {} đã tồn tại nhưng tên không khớp. Tên hiện tại trong DB: {}, Tên được yêu cầu: {}", userId, existingName, fullName);
+                throw new IllegalArgumentException("User ID đã tồn tại nhưng tên không khớp.");
+            }
+            logger.info("User ID: {} đã tồn tại với tên khớp: {}", userId, existingName);
+            return false; // Người dùng đã tồn tại với thông tin đúng
         }
 
         // Tạo mới người dùng
-        String sqlInsert = "INSERT INTO `User` (user_id, name) VALUES (?, ?)";
-        int rows = jdbcTemplate.update(sqlInsert, userId, fullName);
+        String sqlInsert = "INSERT INTO `User` (user_id, name, phone, email) VALUES (?, ?, ?, ?)";
+        int rows = jdbcTemplate.update(sqlInsert, userId, fullName, phone, email);
         if (rows > 0) {
             logger.info("User created with ID: {}", userId);
             return true; // Người dùng được tạo mới
@@ -78,8 +109,8 @@ public class UserService {
     }
 
     public void updateUserDetails(User user, AccountDTO accountDTO) {
-        if (accountDTO.getPhoneNumber() != null && !accountDTO.getPhoneNumber().equals(user.getPhone())) {
-            user.setPhone(accountDTO.getPhoneNumber());
+        if (accountDTO.getPhone() != null && !accountDTO.getPhone().equals(user.getPhone())) {
+            user.setPhone(accountDTO.getPhone());
         }
         if (accountDTO.getFullName() != null && !accountDTO.getFullName().equals(user.getName())) {
             user.setName(accountDTO.getFullName());

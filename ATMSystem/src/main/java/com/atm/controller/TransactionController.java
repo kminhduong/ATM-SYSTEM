@@ -143,13 +143,27 @@ public class TransactionController {
     }
 
     // API Rút tiền qua OTP
-    @PostMapping("/withdraw/otp")
+    @PostMapping("/send-otp")
+    public ResponseEntity<ApiResponse<String>> sendOtpForWithdrawal(@RequestBody Map<String, String> request) {
+        String accountNumber = request.get("accountNumber");
+        // Gọi service để gửi OTP
+        ApiResponse<String> response = transactionService.sendOtpForWithdrawal(accountNumber);
+
+        // Xử lý kết quả
+        if ("OTP đã được gửi đến số điện thoại của bạn.".equals(response.getMessage())) {
+            return ResponseEntity.ok(response); // Thành công
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response); // Lỗi
+        }
+    }
+
+    @PostMapping("/process-with-otp")
     public ResponseEntity<ApiResponse<String>> withdrawWithOtp(@RequestBody WithdrawOtpRequest request) {
         // Gọi service để xử lý toàn bộ logic nghiệp vụ
         ApiResponse<String> response = transactionService.processWithdrawWithOtp(request);
 
         // Trả kết quả về cho client
-        if ("Giao dịch rút tiền thành công".equals(response.getMessage())) {
+        if ("Giao dịch rút tiền thành công.".equals(response.getMessage())) {
             return ResponseEntity.ok(response); // Thành công
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response); // Lỗi
