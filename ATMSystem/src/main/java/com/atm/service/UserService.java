@@ -1,5 +1,6 @@
 package com.atm.service;
 
+import com.atm.dto.AccountDTO;
 import com.atm.model.User;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.BalanceRepository;
@@ -37,34 +38,57 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id " + userId));
     }
 
-    public void createUser(User user) {
-        logger.info("Creating user with id: {}", user.getUserId());
+    public boolean createUser(AccountDTO accountDTO) {
+        String userId = accountDTO.getUserId();
+        if (userId == null || userId.isEmpty()) {
+            logger.error("User ID is required.");
+            throw new IllegalArgumentException("User ID là bắt buộc.");
+        }
 
+        String fullName = accountDTO.getFullName();
+        if (fullName == null || fullName.isEmpty()) {
+            logger.error("Full name is required for user registration.");
+            throw new IllegalArgumentException("Họ tên là bắt buộc.");
+        }
+
+        // Kiểm tra trong cơ sở dữ liệu
         String sqlCheck = "SELECT user_id FROM `User` WHERE user_id = ?";
         String existingUserId = null;
-
         try {
-            existingUserId = jdbcTemplate.queryForObject(sqlCheck, String.class, user.getUserId());
+            existingUserId = jdbcTemplate.queryForObject(sqlCheck, String.class, userId);
         } catch (EmptyResultDataAccessException e) {
-            // Nếu không tìm thấy, tiếp tục tạo mới
+            // Không tìm thấy, tiếp tục tạo mới
         }
 
         if (existingUserId != null) {
             logger.info("User already exists with ID: {}", existingUserId);
-            return; // Hoặc bạn có thể ném ra ngoại lệ nếu cần
+            return false; // Người dùng đã tồn tại
+        }
+
+        // Tạo mới người dùng
+        String sqlInsert = "INSERT INTO `User` (user_id, name) VALUES (?, ?)";
+        int rows = jdbcTemplate.update(sqlInsert, userId, fullName);
+        if (rows > 0) {
+            logger.info("User created with ID: {}", userId);
+            return true; // Người dùng được tạo mới
         } else {
-            logger.info("User does not exist, creating user with id: {}", user.getUserId());
+            logger.error("Failed to create user with ID: {}", userId);
+            throw new RuntimeException("Failed to create user");
+        }
+    }
 
-            // Chèn user mới vào cơ sở dữ liệu
-            String sqlInsert = "INSERT INTO `User` (user_id, name) VALUES (?, ?)";
-            int rows = jdbcTemplate.update(sqlInsert, user.getUserId(), user.getName());
+    public void updateUserDetails(User user, AccountDTO accountDTO) {
+        if (accountDTO.getPhoneNumber() != null && !accountDTO.getPhoneNumber().equals(user.getPhone())) {
+            user.setPhone(accountDTO.getPhoneNumber());
+        }
+        if (accountDTO.getFullName() != null && !accountDTO.getFullName().equals(user.getName())) {
+            user.setName(accountDTO.getFullName());
+        }
 
-            if (rows > 0) {
-                logger.info("User created with ID: {}", user.getUserId());
-            } else {
-                logger.error("Failed to create user with id: {}", user.getUserId());
-                throw new RuntimeException("Failed to create user");
-            }
+        try {
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Có lỗi khi lưu thông tin người dùng: " + e.getMessage());
         }
     }
 }

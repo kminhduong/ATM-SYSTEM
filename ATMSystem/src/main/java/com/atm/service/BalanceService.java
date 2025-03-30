@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 public class BalanceService {
     private final AccountRepository accountRepository;
@@ -62,5 +64,13 @@ public class BalanceService {
         }
 
         return (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    }
+
+    public void createBalance(Account account) {
+        Balance balance = new Balance();
+        balance.setAccount(account);
+        balance.setBalance(0.0);
+        balance.setLastUpdated(LocalDateTime.now());
+        balanceRepository.save(balance);
     }
 }

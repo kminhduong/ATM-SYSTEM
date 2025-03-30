@@ -24,7 +24,7 @@ public class ATM {
     @Column(name = "cash_50", nullable = false)
     private int cash50;
 
-    @Column(name = "total_amount", nullable = false)
+    @Column(name = "total_amount", insertable = false, updatable = false) // Generated column
     private double totalAmount;
 
     @Enumerated(EnumType.STRING)
@@ -37,34 +37,20 @@ public class ATM {
 
     // ✅ No-arg constructor (Hibernate cần)
     public ATM() {
-        this.atmId = UUID.randomUUID().toString();
-        this.lastUpdated = new Date();
+        this.lastUpdated = new Date(); // Mặc định thời gian cập nhật
     }
 
-    // ✅ Constructor đầy đủ
+    // ✅ Constructor đầy đủ (không cần totalAmount vì MySQL sẽ tự tính)
     public ATM(int cash500, int cash200, int cash100, int cash50, ATMStatus status) {
-        this.atmId = UUID.randomUUID().toString();
         this.cash500 = cash500;
         this.cash200 = cash200;
         this.cash100 = cash100;
         this.cash50 = cash50;
-        this.totalAmount = calculateTotal();
         this.status = status;
         this.lastUpdated = new Date();
     }
 
-    // ✅ Tính tổng số tiền tự động
-    public double calculateTotal() {
-        return (cash500 * 500) + (cash200 * 200) + (cash100 * 100) + (cash50 * 50);
-    }
-
-    // ✅ Cập nhật lastUpdated khi có thay đổi
-    @PreUpdate
-    protected void onUpdate() {
-        this.lastUpdated = new Date();
-    }
-
-    // ✅ Getters và Setters
+    // ✅ Getters (Không cần setter cho `totalAmount` vì nó là cột tính toán)
     public String getAtmId() {
         return atmId;
     }
@@ -75,7 +61,6 @@ public class ATM {
 
     public void setCash500(int cash500) {
         this.cash500 = cash500;
-        this.totalAmount = calculateTotal();
     }
 
     public int getCash200() {
@@ -84,7 +69,6 @@ public class ATM {
 
     public void setCash200(int cash200) {
         this.cash200 = cash200;
-        this.totalAmount = calculateTotal();
     }
 
     public int getCash100() {
@@ -93,7 +77,6 @@ public class ATM {
 
     public void setCash100(int cash100) {
         this.cash100 = cash100;
-        this.totalAmount = calculateTotal();
     }
 
     public int getCash50() {
@@ -102,11 +85,10 @@ public class ATM {
 
     public void setCash50(int cash50) {
         this.cash50 = cash50;
-        this.totalAmount = calculateTotal();
     }
 
     public double getTotalAmount() {
-        return totalAmount;
+        return totalAmount; // Chỉ đọc từ cơ sở dữ liệu
     }
 
     public ATMStatus getStatus() {
@@ -119,6 +101,11 @@ public class ATM {
 
     public Date getLastUpdated() {
         return lastUpdated;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.lastUpdated = new Date(); // Cập nhật thời gian khi có thay đổi
     }
 
     @Override

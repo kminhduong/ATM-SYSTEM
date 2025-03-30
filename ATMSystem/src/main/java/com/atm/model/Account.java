@@ -39,6 +39,12 @@ public class Account {
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
 
+    // Phương thức tự động cập nhật thời gian
+    @PreUpdate
+    protected void onUpdate() {
+        this.lastUpdated = LocalDateTime.now();
+    }
+
     @Column
     private String role;  // Không ràng buộc, có thể NULL
 

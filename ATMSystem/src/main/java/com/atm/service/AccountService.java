@@ -36,6 +36,8 @@ public class AccountService {
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
     private final BalanceService balanceService;
+    private final CredentialService credentialService;
+    private final UserService userService;
 
     @Autowired
     public AccountService(AccountRepository accountRepository,
@@ -44,7 +46,10 @@ public class AccountService {
                           UserRepository userRepository,
                           JdbcTemplate jdbcTemplate,
                           JwtUtil jwtUtil,
-                          PasswordEncoder passwordEncoder, BalanceService balanceService) {
+                          PasswordEncoder passwordEncoder,
+                          BalanceService balanceService,
+                          CredentialService credentialService,
+                          UserService userService) {
         this.accountRepository = accountRepository;
         this.credentialRepository = credentialRepository;
         this.balanceRepository = balanceRepository;
@@ -53,180 +58,134 @@ public class AccountService {
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
         this.balanceService = balanceService;
+        this.credentialService = credentialService;
+        this.userService = userService;
     }
 
-    public Account getAccount(String accountNumber) {
-        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
+    /**
+     * Đăng ký tài khoản dựa trên thông tin từ AccountDTO.
+     * Chuyển đổi dữ liệu và gọi hàm createAccount để xử lý logic tạo tài khoản.
+     *
+     * @param accountDTO Đối tượng chứa thông tin tài khoản cần đăng ký.
+     */
+    public void registerAccount(AccountDTO accountDTO) {
+        // Chuyển đổi AccountDTO thành đối tượng Account.
+        Account account = accountDTO.toAccount(userRepository);
 
-        if (accountOpt.isPresent()) {
-            Account account = accountOpt.get();
-            logger.info("🔍 Tài khoản tìm thấy: {}, Role: {}", account.getAccountNumber(), account.getRole());
-            return account;
-        }
+        // Ghi log để xác nhận thông tin đã nhận.
+        logger.info("Account registered successfully for userId: {}", accountDTO.getUserId());
 
-        logger.warn("⚠ Không tìm thấy tài khoản: {}", accountNumber);
-        return null;
+        // Gọi hàm createAccount để xử lý logic kiểm tra và lưu tài khoản.
+        createAccount(account);
     }
 
-    // Đăng ký tài khoản mới
+    /**
+     * Tạo tài khoản trong hệ thống.
+     * Kiểm tra sự tồn tại của tài khoản và người dùng, đồng thời tạo các thực thể liên quan.
+     *
+     * @param account Đối tượng chứa thông tin tài khoản.
+     * @return Tài khoản đã được tạo.
+     */
     @Transactional
     public Account createAccount(Account account) {
-        logger.info("🔍 Đang vào phương thức register...");
+        logger.info("🔍 Đang vào phương thức createAccount...");
         logger.info("Received request to register account: {}", account.getAccountNumber());
 
-        // Kiểm tra xem tài khoản đã tồn tại hay chưa
+        // 1. Kiểm tra xem tài khoản đã tồn tại hay chưa.
         if (accountRepository.existsById(account.getAccountNumber())) {
             logger.error("Account already exists: {}", account.getAccountNumber());
             throw new IllegalArgumentException("Tài khoản đã tồn tại!");
         }
 
-        // Kiểm tra User của tài khoản
+        // 2. Kiểm tra thông tin người dùng (User) của tài khoản.
         User user = account.getUser();
         if (user == null) {
-            // Nếu không có thông tin người dùng trong account, lấy thông tin người dùng từ DB
             logger.info("User của tài khoản là null, kiểm tra lại từ DB...");
             user = userRepository.findByUserId(account.getUser().getUserId()).orElse(null);
 
-            if (user != null) {
-                // Kiểm tra ràng buộc 1 userId chỉ có 1 name
-                if (!user.getName().equals(account.getFullName())) {
-                    logger.error("User with ID {} already exists with a different name: {}", account.getUser().getUserId(), user.getName());
-                    throw new IllegalArgumentException("Tên người dùng không khớp với userId!");
-                }
-            }
-        }
-
-        if (user == null) {
-            // Nếu không tìm thấy User trong DB, tạo User mới và gán cho tài khoản
-            logger.info("Không tìm thấy User, tạo User mới...");
-
-            // Lấy full name từ tài khoản
-            String fullName = account.getFullName();  // Tên người dùng từ Account
-
-            // Lấy userId người dùng nhập vào (nếu có)
-            String userId = account.getUser().getUserId();  // Giả sử người dùng đã nhập userId khi tạo account
-
-            // Kiểm tra tính hợp lệ của userId (CCCD phải là 12 số)
-            if (userId == null || !userId.matches("\\d{12}")) {
-                logger.error("Invalid userId: {}", userId);
-                throw new IllegalArgumentException("userId phải là 12 số (CCCD)");
+            // Nếu User tồn tại nhưng tên không khớp, ném ngoại lệ.
+            if (user != null && !user.getName().equals(account.getFullName())) {
+                logger.error("User với ID {} đã tồn tại nhưng có tên khác: {}", account.getUser().getUserId(), user.getName());
+                throw new IllegalArgumentException("Tên người dùng không khớp với userId!");
             }
 
-            // Tạo user mới từ userId và tên người dùng
-            user = new User();
-            user.setUserId(userId);  // Lưu userId người dùng nhập vào
-            user.setName(fullName);  // Lưu tên người dùng nhập vào (tương ứng với full_name trong Account)
-
-            // Lưu User mới vào DB
-            userRepository.save(user);
-            logger.info("User mới được tạo với ID: {}", user.getUserId());
-
-            // Gán User cho tài khoản
-            account.setUser(user);
-        } else {
-            logger.info("User đã tồn tại: {}", user.getUserId());
+            // Nếu không tìm thấy User, tạo User mới.
+            if (user == null) {
+                logger.info("Không tìm thấy User, tạo User mới...");
+                user = new User();
+                user.setUserId(account.getUser().getUserId());
+                user.setName(account.getFullName());
+                userRepository.save(user);
+                logger.info("User mới được tạo với ID: {}", user.getUserId());
+            }
         }
+        account.setUser(user);
 
-        // Lưu tài khoản vào bảng Account
+        // 3. Lưu tài khoản vào bảng Account.
         Account savedAccount = accountRepository.save(account);
-        accountRepository.flush(); // Đảm bảo tài khoản được commit vào DB
 
-        // Tạo và lưu thông tin Balance
-        Balance balance = new Balance();
-        balance.setAccount(savedAccount); // Liên kết Balance với tài khoản
-        balance.setBalance(0.0); // Số dư mặc định
-        balance.setLastUpdated(LocalDateTime.now());
-        balanceRepository.save(balance);
-        logger.info("Balance record created for account: {}", savedAccount.getAccountNumber());
+        balanceService.createBalance(savedAccount);
+        credentialService.createCredential(savedAccount);
 
-        // Tạo thông tin Credential với PIN mặc định
-        Credential credential = new Credential();
-        credential.setAccount(savedAccount);
-        credential.setPin(passwordEncoder.encode("000000")); // Mã hóa PIN mặc định
-        credential.setFailedAttempts(0);
-        credential.setLockTime(null);
-        credential.setUpdateAt(LocalDateTime.now());
-        credentialRepository.save(credential);
-
-        logger.info("Successfully registered account: {}", savedAccount.getAccountNumber());
+        logger.info("Successfully created account: {}", savedAccount.getAccountNumber());
         return savedAccount;
     }
 
     // Kiểm tra user có tồn tại không
-    public boolean isUserExists(String userId) {
-        String sql = "SELECT COUNT(*) FROM user WHERE user_id = ?";
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
-        return count != null && count > 0;
-    }
+//    public boolean isUserExists(String userId) {
+//        String sql = "SELECT COUNT(*) FROM user WHERE user_id = ?";
+//        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
+//        return count != null && count > 0;
+//    }
 
     @Transactional
     public void updateAccount(AccountDTO accountDTO, String accountNumber) {
         Optional<Account> optionalAccount = accountRepository.findById(accountDTO.getAccountNumber());
 
-        if (optionalAccount.isPresent()) {
-            Account account = optionalAccount.get();
-
-            // Kiểm tra quyền cập nhật
-            String userRole = getUserRole(accountNumber);
-            if (!"ADMIN".equals(userRole) && !accountNumber.equals(accountDTO.getAccountNumber())) {
-                throw new RuntimeException("Bạn không có quyền cập nhật tài khoản này!");
-            }
-
-            // Cập nhật thông tin Account nếu có thay đổi
-            if (accountDTO.getFullName() != null) {
-                account.setFullName(accountDTO.getFullName());
-            }
-
-            // Cập nhật Balance thông qua hàm tách riêng
-            balanceService.updateBalance(accountDTO, account);
-
-            // Cập nhật Pin nếu có thay đổi
-            if (accountDTO.getPin() != null) {
-                Optional<Credential> optionalCredential = credentialRepository.findById(accountDTO.getAccountNumber());
-                if (optionalCredential.isPresent()) {
-                    Credential credential = optionalCredential.get();
-                    credential.setPin(passwordEncoder.encode(accountDTO.getPin())); // Mã hóa pin mới
-                    credential.setUpdateAt(LocalDateTime.now());
-                    credentialRepository.save(credential);  // Lưu Credential đã cập nhật
-                } else {
-                    throw new RuntimeException("Không tìm thấy thông tin Credential cho tài khoản này.");
-                }
-            }
-
-            // Cập nhật Role nếu có thay đổi
-            if (accountDTO.getRole() != null && !accountDTO.getRole().isEmpty()) {
-                account.setRole(accountDTO.getRole());
-            }
-
-            // Cập nhật User nếu có thay đổi
-            if (account.getUser() != null) {
-                User user = account.getUser();
-
-                // Cập nhật số điện thoại trong User nếu có thay đổi
-                if (accountDTO.getPhoneNumber() != null && !accountDTO.getPhoneNumber().equals(user.getPhone())) {
-                    user.setPhone(accountDTO.getPhoneNumber());
-                }
-
-                // Cập nhật tên đầy đủ trong User nếu có thay đổi
-                if (accountDTO.getFullName() != null && !accountDTO.getFullName().equals(user.getName())) {
-                    user.setName(accountDTO.getFullName());
-                }
-
-                // Lưu thông tin User đã cập nhật
-                try {
-                    userRepository.save(user);  // Lưu thông tin User đã cập nhật
-                } catch (Exception e) {
-                    throw new RuntimeException("Có lỗi khi lưu thông tin người dùng: " + e.getMessage());
-                }
-            } else {
-                throw new RuntimeException("Không tìm thấy người dùng liên kết với tài khoản này.");
-            }
-
-            // Lưu Account (Hibernate sẽ tự động lưu Balance khi Account được lưu)
-            accountRepository.save(account);
-
-        } else {
+        if (optionalAccount.isEmpty()) {
             throw new RuntimeException("Tài khoản không tồn tại.");
+        }
+
+        Account account = optionalAccount.get();
+
+        // Kiểm tra quyền
+        checkUpdatePermission(accountNumber, accountDTO);
+
+        // Cập nhật thông tin tài khoản
+        updateAccountDetails(account, accountDTO);
+
+        // Cập nhật số dư
+        balanceService.updateBalance(accountDTO, account);
+
+        // Cập nhật thông tin bảo mật (Credential)
+        if (accountDTO.getPin() != null) {
+            credentialService.changePIN(accountDTO);
+        }
+
+        // Cập nhật thông tin người dùng
+        if (account.getUser() != null) {
+            userService.updateUserDetails(account.getUser(), accountDTO);
+        } else {
+            throw new RuntimeException("Không tìm thấy người dùng liên kết với tài khoản này.");
+        }
+
+        // Lưu Account sau khi cập nhật
+        accountRepository.save(account);
+    }
+
+    private void checkUpdatePermission(String accountNumber, AccountDTO accountDTO) {
+        String userRole = getUserRole(accountNumber);
+        if (!"ADMIN".equals(userRole) && !accountNumber.equals(accountDTO.getAccountNumber())) {
+            throw new RuntimeException("Bạn không có quyền cập nhật tài khoản này!");
+        }
+    }
+
+    private void updateAccountDetails(Account account, AccountDTO accountDTO) {
+        if (accountDTO.getFullName() != null) {
+            account.setFullName(accountDTO.getFullName());
+        }
+        if (accountDTO.getRole() != null && !accountDTO.getRole().isEmpty()) {
+            account.setRole(accountDTO.getRole());
         }
     }
 
@@ -237,6 +196,19 @@ public class AccountService {
     public String getUserRole(String accountNumber) {
         return accountRepository.findRoleByAccountNumber(accountNumber);
     }
+
+//    public Account getAccount(String accountNumber) {
+//        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
+//
+//        if (accountOpt.isPresent()) {
+//            Account account = accountOpt.get();
+//            logger.info("🔍 Tài khoản tìm thấy: {}, Role: {}", account.getAccountNumber(), account.getRole());
+//            return account;
+//        }
+//
+//        logger.warn("⚠ Không tìm thấy tài khoản: {}", accountNumber);
+//        return null;
+//    }
 
 //    public void updateAccountStatus(String new_status) {
 //        // Danh sách trạng thái hợp lệ

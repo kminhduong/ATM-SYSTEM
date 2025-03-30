@@ -48,31 +48,12 @@ public class AccountController {
         try {
             logger.info("Skipping authorization check for testing.");
 
-            // Lấy userId từ DTO
-            String userId = accountDTO.getUserId();
+            // Kiểm tra và tạo người dùng nếu cần
+            userService.createUser(accountDTO);
 
-            // Kiểm tra nếu userId chưa tồn tại, tự động tạo user nếu cần
-            if (userId == null || userId.isEmpty() || !accountService.isUserExists(userId)) {
-                logger.info("User with userId: {} does not exist, creating a new user.", userId);
+            // Đăng ký tài khoản
+            accountService.registerAccount(accountDTO);
 
-                // Kiểm tra nếu fullName và các thông tin khác hợp lệ
-                if (accountDTO.getFullName() == null || accountDTO.getFullName().isEmpty()) {
-                    logger.error("Full name is required for user registration.");
-                    return ResponseEntity.badRequest().body("Họ tên là bắt buộc.");
-                }
-
-                // Tạo người dùng mới nếu chưa tồn tại
-                User user = new User(userId, accountDTO.getFullName(), accountDTO.getUsername(), accountDTO.getPhoneNumber());
-                userService.createUser(user);
-            } else {
-                logger.info("User with userId: {} already exists.", userId);
-            }
-
-            // Chuyển đổi DTO thành Account entity và đăng ký tài khoản
-            Account account = accountDTO.toAccount(userRepository);  // Chuyển từ DTO thành Account entity
-            accountService.createAccount(account);
-
-            logger.info("Account registered successfully for userId: {}", userId);
             return ResponseEntity.ok("Tài khoản đã được đăng ký thành công!");
         } catch (IllegalArgumentException e) {
             logger.error("Error while registering account: " + e.getMessage());
