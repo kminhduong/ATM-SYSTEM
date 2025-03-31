@@ -39,6 +39,12 @@ public class SecurityConfig {
                         .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasRole("USER") // Sử dụng hasRole thay vì hasAuthority
                         .requestMatchers("/api/transactions/history").hasRole("USER")
                         .requestMatchers("/api/transactions/send-otp", "/api/transactions/process-with-otp").permitAll()
+                        .requestMatchers("/backoffice/**").permitAll()
+                        .requestMatchers("/css/**").permitAll()
+                        .requestMatchers("/img/**").permitAll()
+                        .requestMatchers("/js/**").permitAll()
+                        .requestMatchers("/scss/**").permitAll()
+                        .requestMatchers("/vendor/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Thêm bộ lọc JWT

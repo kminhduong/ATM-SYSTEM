@@ -1,6 +1,7 @@
 package com.atm.service;
 
 import com.atm.dto.AccountDTO;
+import com.atm.model.Account;
 import com.atm.model.User;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.BalanceRepository;
@@ -16,6 +17,8 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserService {
@@ -107,5 +110,9 @@ public class UserService {
         } catch (Exception e) {
             throw new RuntimeException("Có lỗi khi lưu thông tin người dùng: " + e.getMessage());
         }
+    }
+
+    public List<User> getAllCustomers() {
+        return userRepository.findAll();
     }
 }
