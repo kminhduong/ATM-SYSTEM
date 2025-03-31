@@ -63,20 +63,6 @@ public class UserService {
             throw new IllegalArgumentException("Email là bắt buộc.");
         }
 
-        // Kiểm tra trong cơ sở dữ liệu
-//        String sqlCheck = "SELECT user_id FROM `User` WHERE user_id = ?";
-//        String existingUserId = null;
-//        try {
-//            existingUserId = jdbcTemplate.queryForObject(sqlCheck, String.class, userId);
-//        } catch (EmptyResultDataAccessException e) {
-//            // Không tìm thấy, tiếp tục tạo mới
-//        }
-//
-//        if (existingUserId != null) {
-//            logger.info("User already exists with ID: {}", existingUserId);
-//            return false; // Người dùng đã tồn tại
-//        }
-
         // Kiểm tra trong cơ sở dữ liệu dựa trên userId
         String sqlCheck = "SELECT name FROM `User` WHERE user_id = ?";
         String existingName = null;

@@ -281,16 +281,6 @@ public class TransactionService {
         }
         String phoneNumber = userOpt.get().getPhone();
 
-        // Kiểm tra nếu request không cung cấp phoneNumber
-//        if (request.getPhoneNumber() == null || request.getPhoneNumber().isEmpty()) {
-//            return new ApiResponse<>("Số điện thoại là bắt buộc.", null);
-//        }
-
-        // Xác minh số điện thoại khớp với tài khoản
-//        if (!request.getPhoneNumber().equals(phoneNumber)) {
-//            return new ApiResponse<>("Số điện thoại không khớp với tài khoản.", null);
-//        }
-
         // Kiểm tra số dư tài khoản
         if (request.getAmount() > account.getBalance()) {
             return new ApiResponse<>("Số dư không đủ để thực hiện giao dịch.", null);

@@ -118,9 +118,8 @@ public class AccountService {
         }
         account.setUser(user);
 
-        // 3. Lưu tài khoản vào bảng Account.
+        // 3. Lưu tài khoản
         Account savedAccount = accountRepository.save(account);
-
         balanceService.createBalance(savedAccount);
         credentialService.createCredential(savedAccount);
 
@@ -138,14 +137,18 @@ public class AccountService {
 
         Account account = optionalAccount.get();
 
-        // Kiểm tra quyền
-        checkUpdatePermission(accountNumber, accountDTO);
+        // Kiểm tra quyền thay đổi thông tin
+        checkUpdatePermission(accountNumber, accountDTO, false);
 
         // Cập nhật thông tin tài khoản
         updateAccountDetails(account, accountDTO);
 
-        // Cập nhật số dư
-        balanceService.updateBalance(accountDTO, account, TransactionType.DEPOSIT);
+        // Nếu cập nhật số dư
+        if (accountDTO.getBalance() != null) {
+            checkUpdatePermission(accountNumber, accountDTO, true);
+            balanceService.updateBalance(accountDTO, account, TransactionType.DEPOSIT);
+        }
+
         // Cập nhật thông tin bảo mật (Credential)
         if (accountDTO.getPin() != null) {
             credentialService.changePIN(accountDTO);
@@ -162,10 +165,18 @@ public class AccountService {
         accountRepository.save(account);
     }
 
-    private void checkUpdatePermission(String accountNumber, AccountDTO accountDTO) {
+    private void checkUpdatePermission(String accountNumber, AccountDTO accountDTO, boolean isBalanceUpdate) {
         String userRole = getUserRole(accountNumber);
-        if (!"ADMIN".equals(userRole) && !accountNumber.equals(accountDTO.getAccountNumber())) {
+        if ("ADMIN".equals(userRole)) {
+            return; // ADMIN luôn có quyền
+        }
+
+        if (!accountNumber.equals(accountDTO.getAccountNumber())) {
             throw new RuntimeException("Bạn không có quyền cập nhật tài khoản này!");
+        }
+
+        if (isBalanceUpdate) {
+            throw new RuntimeException("Bạn không có quyền thay đổi số dư tài khoản này!");
         }
     }
 
