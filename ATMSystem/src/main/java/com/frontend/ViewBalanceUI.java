@@ -1,4 +1,5 @@
 package com.frontend;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -17,7 +18,6 @@ public class ViewBalanceUI extends JFrame {
     public ViewBalanceUI(String accountNumber) {
         this.accountNumber = accountNumber;
 
-        // Cài đặt JFrame
         setTitle("ATM - View Balance");
         setSize(600, 400);
         setLocation(300, 150);
@@ -26,54 +26,49 @@ public class ViewBalanceUI extends JFrame {
 
         l1 = new JLabel("VIEW BALANCE ACCOUNT");
         l1.setFont(new Font("Osward", Font.BOLD, 32));
-        l1.setBounds(200, 100, 600, 30);
+        l1.setBounds(150, 50, 600, 30);
         add(l1);
 
-        // Account Number
         l2 = new JLabel("Account Number:");
         l2.setFont(new Font("Arial", Font.PLAIN, 20));
-        l2.setBounds(250, 200, 200, 30);
+        l2.setBounds(50, 200, 200, 30);
         add(l2);
 
         accountNumberLabel = new JLabel(accountNumber);
         accountNumberLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        accountNumberLabel.setBounds(450, 200, 200, 30);
+        accountNumberLabel.setBounds(250, 200, 200, 30);
         add(accountNumberLabel);
 
-        // Full Name
         l3 = new JLabel("Full Name:");
         l3.setFont(new Font("Arial", Font.PLAIN, 20));
-        l3.setBounds(250, 300, 150, 30);
+        l3.setBounds(50, 250, 150, 30);
         add(l3);
 
         fullNameLabel = new JLabel("Loading...");
         fullNameLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        fullNameLabel.setBounds(450, 300, 200, 30);
+        fullNameLabel.setBounds(250, 250, 200, 30);
         add(fullNameLabel);
 
-        // Balance
         l4 = new JLabel("Current Balance:");
         l4.setFont(new Font("Arial", Font.PLAIN, 20));
-        l4.setBounds(250, 400, 150, 30);
+        l4.setBounds(50, 300, 150, 30);
         add(l4);
 
         balanceLabel = new JLabel("Loading...");
         balanceLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        balanceLabel.setBounds(450, 400, 200, 30);
+        balanceLabel.setBounds(250, 300, 200, 30);
         add(balanceLabel);
 
-        // Exit Button
         exitButton = new JButton("Exit");
         exitButton.setFont(new Font("Arial", Font.BOLD, 20));
-        exitButton.setBounds(500, 500, 200, 50);
+        exitButton.setBounds(200, 350, 200, 50);
         add(exitButton);
 
         getContentPane().setBackground(Color.WHITE);
-        setSize(850, 800);
+        setSize(600, 500); // Điều chỉnh kích thước
         setLocation(250, 200);
         setVisible(true);
 
-        // Button action
         exitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 new TransactionsUI(accountNumber).setVisible(true);
@@ -81,14 +76,11 @@ public class ViewBalanceUI extends JFrame {
             }
         });
 
-        // Gọi API để lấy thông tin tài khoản
         loadAccountDetails();
     }
 
-    // Hàm lấy thông tin tài khoản từ backend
     public void loadAccountDetails() {
         try {
-            // Sử dụng URL API bạn yêu cầu
             URL url = new URL("http://localhost:8080/accounts/" + accountNumber);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
@@ -106,20 +98,16 @@ public class ViewBalanceUI extends JFrame {
             }
             conn.disconnect();
 
-            // Phân tích JSON
             JSONObject accountData = new JSONObject(response.toString());
             String accountHolderName = accountData.getString("accountHolderName");
             double balance = accountData.getDouble("balance");
 
-            // Cập nhật UI
             fullNameLabel.setText(accountHolderName);
-            balanceLabel.setText(String.format("$%.2f", balance));
+            balanceLabel.setText(String.format("%.2f VND", balance));
 
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error loading account information!", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error loading account information! Please try again later.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-
 }

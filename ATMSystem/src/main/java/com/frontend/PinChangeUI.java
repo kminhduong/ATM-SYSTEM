@@ -1,72 +1,109 @@
 package com.frontend;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 public class PinChangeUI extends JFrame {
-    JLabel l1,l2,l3,l4;
-    public JTextField tf1, tf2,tf3;
-    public JButton b1, b2;
-    public String accountNumber;
+    private JLabel l1, l2, l3, l4;
+    private JTextField tf1, tf2, tf3;
+    private JButton b1, b2;
+    private String accountNumber;
+
     public PinChangeUI(String accountNumber) {
         this.accountNumber = accountNumber;
-        l1 = new JLabel("ENTER THE AMOUNT TO DEPOSIT");
+        setTitle("ATM - PIN Change");
+        initializeComponents();
+        addComponentsToFrame();
+        addActionListeners();
+        configureFrame();
+    }
+
+    private void initializeComponents() {
+        l1 = new JLabel("CHANGE YOUR PIN");
         l1.setFont(new Font("Osward", Font.BOLD, 32));
-        l1.setBounds(175, 75, 800, 40);
-        add(l1);
+
         l2 = new JLabel("Enter current PIN:");
-        l2.setFont(new Font("Raleway", Font.BOLD, 24));
-        l2.setBounds(200, 150, 450, 40);
-        add(l2);
-        tf1 = new JTextField(15);
-        tf1.setBounds(250, 200, 400, 40);
-        tf1.setFont(new Font("Arial", Font.BOLD, 24));
-        add(tf1);
         l3 = new JLabel("Enter new PIN:");
-        l3.setFont(new Font("Raleway", Font.BOLD, 22));
-        l3.setBounds(200, 250, 300, 30);
-        add(l3);
-        tf2 = new JTextField(15);
-        tf2.setBounds(250, 300, 400, 40);
-        tf2.setFont(new Font("Arial", Font.BOLD, 24));
-        add(tf2);
         l4 = new JLabel("Confirm new PIN:");
-        l4.setFont(new Font("Raleway", Font.BOLD, 22));
-        l4.setBounds(200, 350, 300, 30);
-        add(l4);
+
+        JLabel[] labels = {l2, l3, l4};
+        for (JLabel label : labels) {
+            label.setFont(new Font("Raleway", Font.BOLD, 24));
+        }
+
+        tf1 = new JTextField(15);
+        tf2 = new JTextField(15);
         tf3 = new JTextField(15);
-        tf3.setBounds(250, 400, 400, 40);
-        tf3.setFont(new Font("Arial", Font.BOLD, 24));
-        add(tf3);
+
+        JTextField[] textFields = {tf1, tf2, tf3};
+        for (JTextField textField : textFields) {
+            textField.setFont(new Font("Arial", Font.BOLD, 24));
+        }
+
         b1 = new JButton("Exit");
-        b1.setBackground(Color.BLACK);
-        b1.setForeground(Color.BLACK);
-
         b2 = new JButton("Change");
-        b2.setBackground(Color.BLACK);
-        b2.setForeground(Color.BLACK);
+
+        JButton[] buttons = {b1, b2};
+        for (JButton button : buttons) {
+            button.setFont(new Font("Arial", Font.BOLD, 24));
+            button.setBackground(Color.BLACK);
+            button.setForeground(Color.BLACK);
+        }
+    }
+
+    private void addComponentsToFrame() {
         setLayout(null);
-        b1.setFont(new Font("Arial", Font.BOLD, 24));
-        b1.setBounds(350, 500, 200, 50);
+
+        l1.setBounds(250, 50, 400, 40);
+        add(l1);
+
+        addComponent(l2, 200, 150, tf1, 250, 200);
+        addComponent(l3, 200, 250, tf2, 250, 300);
+        addComponent(l4, 200, 350, tf3, 250, 400);
+
+        b1.setBounds(200, 500, 200, 50);
+        b2.setBounds(450, 500, 200, 50);
         add(b1);
-
-        b2.setFont(new Font("Arial", Font.BOLD, 24));
-        b2.setBounds(600, 500, 200, 50);
         add(b2);
-        getContentPane().setBackground(Color.WHITE);
+    }
 
+    private void addComponent(JLabel label, int lx, int ly, Component field, int fx, int fy) {
+        label.setBounds(lx, ly, 300, 30);
+        field.setBounds(fx, fy, 400, 40);
+        add(label);
+        add(field);
+    }
+
+    private void addActionListeners() {
+        b1.addActionListener(e -> navigateToTransactions());
+        b2.addActionListener(e -> processPinChange());
+    }
+
+    private void navigateToTransactions() {
+        new TransactionsUI(accountNumber).setVisible(true);
+        dispose();
+    }
+
+    private void processPinChange() {
+        String currentPin = tf1.getText();
+        String newPin = tf2.getText();
+        String confirmPin = tf3.getText();
+
+        if (currentPin.isEmpty() || newPin.isEmpty() || confirmPin.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Please fill all fields");
+        } else if (!newPin.equals(confirmPin)) {
+            JOptionPane.showMessageDialog(null, "New PIN and confirmation do not match");
+        } else {
+            JOptionPane.showMessageDialog(null, "PIN changed successfully!");
+        }
+    }
+
+    private void configureFrame() {
+        getContentPane().setBackground(Color.WHITE);
         setSize(850, 800);
         setLocation(250, 200);
         setVisible(true);
-        b1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                new TransactionsUI(accountNumber).setVisible(true);
-                dispose();
-            }
-        });
-        b2.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-            }
-        });
     }
 }

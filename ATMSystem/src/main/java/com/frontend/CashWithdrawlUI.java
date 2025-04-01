@@ -9,103 +9,64 @@ public class CashWithdrawlUI extends JFrame {
 
     private JLabel l1;
     private JButton b1, b2, b3, b4, b5, b6, b7;
-
-    private String accountNumber;  // Nhận accountNumber từ trang trước
+    private String accountNumber;
 
     public CashWithdrawlUI(String accountNumber) {
         this.accountNumber = accountNumber;
-
-        // Set title and layout
         setTitle("ATM - Cash Withdrawal");
-        setLayout(null);
+        initializeComponents();
+        addComponentsToFrame();
+        addActionListeners();
+        configureFrame();
+    }
 
-        // Add label
-        l1 = new JLabel("Please Select Withdrawl Amount");
+    private void initializeComponents() {
+        l1 = new JLabel("Please Select Withdrawal Amount");
         l1.setForeground(Color.BLACK);
         l1.setFont(new Font("Osward", Font.BOLD, 32));
+
+        b1 = createButton("500.000");
+        b2 = createButton("1.000.000");
+        b3 = createButton("2.000.000");
+        b4 = createButton("3.000.000");
+        b5 = createButton("5.000.000");
+        b6 = createButton("Enter Amount");
+        b7 = createButton("Exit");
+    }
+
+    private JButton createButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 20));
+        return button;
+    }
+
+    private void addComponentsToFrame() {
+        setLayout(null);
+
         l1.setBounds(150, 50, 700, 50);
         add(l1);
 
-        // Create buttons for fixed withdrawal amounts
-        b1 = new JButton("500.000");
-        b2 = new JButton("1.000.000");
-        b3 = new JButton("2.000.000");
-        b4 = new JButton("3.000.000");
-        b5 = new JButton("5.000.000");
-        b6 = new JButton("Enter Amount");  // Button for entering custom amount
-        b7 = new JButton("Exit");
+        addButton(b1, 50, 250);
+        addButton(b2, 50, 350);
+        addButton(b3, 50, 450);
+        addButton(b4, 500, 250);
+        addButton(b5, 500, 350);
+        addButton(b6, 500, 450);
+        addButton(b7, 500, 550);
+    }
 
-        // Set button fonts and positions
-        b1.setFont(new Font("Arial", Font.BOLD, 20));
-        b1.setBounds(50, 250, 300, 50);
-        add(b1);
+    private void addButton(JButton button, int x, int y) {
+        button.setBounds(x, y, 300, 50);
+        add(button);
+    }
 
-        b2.setFont(new Font("Arial", Font.BOLD, 20));
-        b2.setBounds(50, 350, 300, 50);
-        add(b2);
+    private void addActionListeners() {
+        b1.addActionListener(createWithdrawListener(500000));
+        b2.addActionListener(createWithdrawListener(1000000));
+        b3.addActionListener(createWithdrawListener(2000000));
+        b4.addActionListener(createWithdrawListener(3000000));
+        b5.addActionListener(createWithdrawListener(5000000));
 
-        b3.setFont(new Font("Arial", Font.BOLD, 20));
-        b3.setBounds(50, 450, 300, 50);
-        add(b3);
-
-        b4.setFont(new Font("Arial", Font.BOLD, 20));
-        b4.setBounds(500, 250, 300, 50);
-        add(b4);
-
-        b5.setFont(new Font("Arial", Font.BOLD, 20));
-        b5.setBounds(500, 350, 300, 50);
-        add(b5);
-
-        b6.setFont(new Font("Arial", Font.BOLD, 20));
-        b6.setBounds(500, 450, 300, 50);
-        add(b6);
-
-        b7.setFont(new Font("Arial", Font.BOLD, 20));
-        b7.setBounds(500, 550, 300, 50);
-        add(b7);
-
-        // Button actions for fixed amounts
-        b1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                double amount = 500000;  // Set the amount to 500.000
-                new TransactionConfirmationUI(accountNumber, amount).setVisible(true);
-                dispose();
-            }
-        });
-
-        b2.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                double amount = 1000000;  // Set the amount to 1.000.000
-                new TransactionConfirmationUI(accountNumber, amount).setVisible(true);
-                dispose();
-            }
-        });
-
-        b3.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                double amount = 2000000;  // Set the amount to 2.000.000
-                new TransactionConfirmationUI(accountNumber, amount).setVisible(true);
-                dispose();
-            }
-        });
-
-        b4.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                double amount = 3000000;  // Set the amount to 3.000.000
-                new TransactionConfirmationUI(accountNumber, amount).setVisible(true);
-                dispose();
-            }
-        });
-
-        b5.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                double amount = 5000000;
-                new TransactionConfirmationUI(accountNumber, amount).setVisible(true);
-                dispose();
-            }
-        });
-
-        // Action for "Enter Amount" button
         b6.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 new EnterAmountUI(accountNumber).setVisible(true);  // Pass account number to EnterAmountUI
@@ -113,20 +74,28 @@ public class CashWithdrawlUI extends JFrame {
             }
         });
 
-        // Action for "Exit" button
         b7.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 new TransactionsUI(accountNumber).setVisible(true);  // Return to main transaction screen
                 dispose();
             }
         });
+    }
 
-        // Set frame properties
+    private ActionListener createWithdrawListener(double amount) {
+        return new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                new TransactionConfirmationUI(accountNumber, amount).setVisible(true);
+                dispose();
+            }
+        };
+    }
+
+    private void configureFrame() {
         setSize(850, 800);
         setLocation(250, 0);
         getContentPane().setBackground(Color.WHITE);
         setVisible(true);
     }
-
 
 }
