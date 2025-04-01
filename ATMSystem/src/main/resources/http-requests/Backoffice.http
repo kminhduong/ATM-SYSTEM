@@ -3,12 +3,10 @@ POST http://localhost:8080/accounts/register
 Content-Type: application/json
 
 {
-  "userId": "111111111111",
-  "accountNumber": "11111",
-  "fullName": "Nguyễn Văn D",
-  "username": "nguyen123",
-  "phone": "0901234567",
-  "email": "sugahong0107@gmail.com",
+  "accountNumber": "0123789456",
+  "username": "phamthib",
+  "password": "bpham",
+  "fullName": "PHAM THI B",
   "accountType": "SAVINGS",
   "status": "ACTIVE"
 }
@@ -20,8 +18,8 @@ POST http://localhost:8080/accounts/login
 Content-Type: application/json
 
 {
-  "accountNumber": "0000000000",
-  "pin": "000000"
+  "accountNumber": "9999999999",
+  "password": "secureAdminPass"
 }
 
 > {% client.global.set("authToken", response.body.token); %}
@@ -40,10 +38,11 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "accountNumber": "11111",
-  "pin": "555555",
-  "balance": "100000000"
+  "accountNumber": "0123789456",
+  "pin": "",
+  "phoneNumber": "0303044120"
 }
+
 
 ###
 
@@ -54,7 +53,13 @@ Authorization: Bearer {{authToken}}
 ###
 
 # 📝 Get Account by Number (Lấy tài khoản theo số)
-GET http://localhost:8080/accounts/3333333333
+GET http://localhost:8080/accounts/0123789456
+Authorization: Bearer {{authToken}}
+
+###
+
+# 📝 Get Balance (Kiểm tra số dư)
+GET http://localhost:8080/accounts/0123789456/balance
 Authorization: Bearer {{authToken}}
 
 ###
@@ -62,8 +67,3 @@ Authorization: Bearer {{authToken}}
 # 📝 Logout (Đăng xuất)
 POST http://localhost:8080/accounts/logout
 Authorization: Bearer {{authToken}}
-
-###
-
-GET http://localhost:8080/account/check-role
-
