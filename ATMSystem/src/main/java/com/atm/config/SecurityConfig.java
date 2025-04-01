@@ -44,7 +44,9 @@ public class SecurityConfig {
                         .requestMatchers("/accounts").hasAuthority("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasRole("USER") // Sử dụng hasRole thay vì hasAuthority
-                        .requestMatchers("/api/transactions/history").hasRole("USER")
+                        .requestMatchers("/api/transactions/history").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/get-user-transaction/{userId}").hasRole("ADMIN")
+                        .requestMatchers("/api/transactions/admin-deposit").authenticated()
                         .requestMatchers("/api/transactions/send-otp", "/api/transactions/process-with-otp").permitAll()
                         .requestMatchers("/login", "/css/**", "/js/**","/img/**","/scss/**","/vendor/**").permitAll()
                         .requestMatchers("/admin/**").authenticated()

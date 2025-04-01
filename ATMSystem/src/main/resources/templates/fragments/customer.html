@@ -13,7 +13,6 @@
             <div class="table-responsive">
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                     <thead>
-
                     <tr>
                         <th>ID</th>
                         <th>Họ tên</th>
@@ -43,8 +42,12 @@
                                 🕐 Lịch sử GD
                             </button>
 
-                            <button class="btn btn-success" th:attr="onclick='viewAddMoney(' + ${customer.userId} + ')'" >
+                            <button class="btn btn-success" th:attr="onclick='viewDepositMoney(' + ${customer.userId} + ')'" >
                                 💳 Nạp tiền
+                            </button>
+
+                            <button class="btn btn-success" th:attr="onclick='viewInfoModal(' + ${customer.userId} + ')'" >
+                                📝 Cập nhật TT
                             </button>
                         </td>
                     </tr>
@@ -57,39 +60,201 @@
 </div>
 
 <div class="modal fade" id="transactionHistoryModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Lịch sử giao dịch</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <ul id="transactionList"></ul>
+                <table class="table table-striped table-bordered" >
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Số tài khoản</th>
+                        <th>Khoản tiền</th>
+                        <th>Loại</th>
+                    </tr>
+                    </thead>
+                    <tbody id="transactionTable">
+
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="depositModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nạp tiền vào tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="depositForm">
+                    <div class="mb-3">
+                        <label class="form-label">Khách hàng: <span id="customerName"></span></label>
+
+                    </div>
+                    <div class="mb-3">
+                        <label for="accountSelect" class="form-label">Chọn tài khoản:</label>
+                        <select class="form-select" id="accountSelect">
+
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="depositAmount" class="form-label">Số tiền cần nạp:</label>
+                        <input type="number" class="form-control" id="depositAmount" placeholder="Nhập số tiền" required>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="depositButton" onclick="DepositMoney()">Nạp </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
+    const depositModal = new bootstrap.Modal(document.getElementById("depositModal"));
     function viewTransactionHistory(customerId) {
-        // fetch('/api/transactions/history/' + customerId)
-        //     .then(response => response.json())
-        //     .then(data => {
-        //         let list = document.getElementById("transactionList");
-        //         list.innerHTML = "";
-        //         data.forEach(tx => {
-        //             let li = document.createElement("li");
-        //             li.textContent = tx.date + ": " + tx.amount + " VND (" + tx.type + ")";
-        //             list.appendChild(li);
-        //         });
-        //         new bootstrap.Modal(document.getElementById("transactionHistoryModal")).show();
-        //     });
+        fetch('/api/transactions/get-user-transaction/' + customerId)
+            .then(response => response.json())
+            .then(data => {
 
-        alert("Show Transaction modal")
+                console.log(data)
+                if (data.data == null){
+                    alert("Không tìm thấy lịch sử giao dịch nào cho tài khoản này")
+                    return;
+                }
+
+                const dataTable = document.getElementById("transactionTable");
+                const transactionList = sortByCreatedAt(data.data)
+                dataTable.innerHTML = ""
+                transactionList.forEach(transaction => {
+
+                    const row = document.createElement("tr");
+
+                    // Tạo các ô dữ liệu
+                    const timeCell = document.createElement("td");
+                    timeCell.textContent = formatDateTime(transaction.createAt);
+
+                    const accountCell = document.createElement("td");
+                    accountCell.textContent = transaction.accountNumber;
+
+                    const amountCell = document.createElement("td");
+                    amountCell.textContent = formatCurrency(transaction.amount);
+
+                    const typeCell = document.createElement("td");
+                    typeCell.textContent = transaction.type;
+
+                    // Thêm các ô vào dòng
+                    row.appendChild(timeCell);
+                    row.appendChild(accountCell);
+                    row.appendChild(amountCell);
+                    row.appendChild(typeCell);
+
+                    // Thêm dòng vào tbody
+                    dataTable.appendChild(row);
+
+
+                });
+                new bootstrap.Modal(document.getElementById("transactionHistoryModal")).show();
+            });
+
     }
 
-    function viewAddMoney(customerId) {
-
-        alert("Show Add money modal")
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     }
+    function formatDateTime(dateTimeString) {
+
+        const date = new Date(dateTimeString);
+
+
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Tháng bắt đầu từ 0
+        const year = date.getFullYear();
+
+
+        return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
+    }
+
+    // Ví dụ sử dụng
+    const formattedTime = formatDateTime("2025-04-01T16:27:37.000+00:00");
+    console.log(formattedTime); // Output: 16:27:37 01/04/2025
+
+
+
+    function viewDepositMoney(customerId) {
+        fetch('/accounts/get-by-user/' + customerId)
+            .then(response => response.json())
+            .then(data => {
+
+                console.log(data)
+                if (data.data == null){
+                    alert("Không tìm thấy tài khoản nào của user này")
+                    return;
+                }
+                document.getElementById("customerName").innerHTML = customerId
+                const accSelectEle = document.getElementById("accountSelect");
+                accSelectEle.innerHTML =""
+                data.data.forEach(acc =>{
+                    const option = document.createElement("option");
+                    option.value=acc.accountNumber;
+                    option.text = acc.accountNumber;
+
+                    accSelectEle.appendChild(option);
+                })
+
+                depositModal.show()
+            });
+    }
+
+    function DepositMoney () {
+        const account = document.getElementById('accountSelect').value;
+        const amount = document.getElementById('depositAmount').value;
+        const userId = document.getElementById("customerName").innerHTML;
+        if (!amount || amount <= 0) {
+            alert('Vui lòng nhập số tiền hợp lệ!');
+            return;
+        }
+
+        const payload = { account, amount };
+
+
+        fetch('/api/transactions/admin-deposit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(`Kết quả: ${data.message}`);
+                document.getElementById('depositAmount').value = ""
+                depositModal.hide()
+            })
+            .catch(error => {
+                console.error('Có lỗi xảy ra:', error);
+                alert('Giao dịch thất bại!');
+            });
+    }
+
+    function sortByCreatedAt(data) {
+        return data.sort((a, b) => new Date(a.createAt) - new Date(b.createAt));
+    }
+
+
 </script>

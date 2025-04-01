@@ -8,6 +8,8 @@ import com.atm.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,9 @@ public class BackOfficeController {
 
     @GetMapping("/admin")
     public String viewAdminPage(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        model.addAttribute("username", username);
         model.addAttribute("content", "fragments/main");
         return "index";
     }
@@ -45,15 +50,6 @@ public class BackOfficeController {
         }
         return "login";
     }
-
-//    @PostMapping("/backoffice/login")
-//    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginRequest) {
-//        String token = transactionService.login(loginRequest.get("accountNumber"), loginRequest.get("pin"));
-//        if (token != null) {
-//            return ResponseEntity.ok(Map.of("message", "Login successful", "token", token));
-//        }
-//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid account number or PIN."));
-//    }
 
     @GetMapping("/admin/customers")
     public String viewCustomerPage(Model model) {

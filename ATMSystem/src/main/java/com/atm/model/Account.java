@@ -1,5 +1,6 @@
 package com.atm.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -13,6 +14,7 @@ public class Account {
 
     @OneToOne
     @JoinColumn(name = "account_number", referencedColumnName = "account_number", insertable = false, updatable = false)
+    @JsonIgnore
     private Credential credential;
 
     @Column(name = "username", length = 50, nullable = false, unique = true)
@@ -21,19 +23,24 @@ public class Account {
     @Column(name = "full_name", length = 100, nullable = false)
     private String fullName;
 
+
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "account_type", nullable = false)
+    @JsonIgnore
     private AccountType accountType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @JsonIgnore
     private AccountStatus status;
 
     @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private Balance balanceEntity;
 
     @Column(name = "last_updated")

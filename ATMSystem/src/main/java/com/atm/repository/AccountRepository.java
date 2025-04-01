@@ -22,4 +22,7 @@ public interface AccountRepository extends JpaRepository<Account, String> {
 
     // Tìm Account theo User
     List<Account> findByUser(User user);
+
+    @Query(value = "SELECT a.account_number, a.user_id, a.account_type, a.status, a.last_updated, a.username, a.full_name, a.role FROM Account a INNER JOIN User u ON u.user_id = a.user_id WHERE u.user_id = ?1", nativeQuery = true)
+    List<Account> findByUserId(String userId);
 }

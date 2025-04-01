@@ -12,12 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.atm.util.JwtUtil;
-import org.springframework.stereotype.Service;
+
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -111,10 +109,10 @@ public class TransactionService {
 
         // Thực hiện giao dịch
         switch (transactionType) {
-            case WITHDRAWAL:
+            case Withdrawal:
                 return handleWithdraw(account, amount);
 
-            case DEPOSIT:
+            case Deposit:
                 return handleDeposit(account, amount);
 
             case TRANSFER:
@@ -133,13 +131,13 @@ public class TransactionService {
         // Tạo DTO để cập nhật số dư
         AccountDTO withdrawalDTO = new AccountDTO();
         withdrawalDTO.setBalance(amount);
-        balanceService.updateBalance(withdrawalDTO, account, TransactionType.WITHDRAWAL);
+        balanceService.updateBalance(withdrawalDTO, account, TransactionType.Withdrawal);
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(
                 account.getAccountNumber(),
                 amount,
-                TransactionType.WITHDRAWAL,
+                TransactionType.Withdrawal,
                 new Date()
         );
 
@@ -153,17 +151,17 @@ public class TransactionService {
         return new ApiResponse<>("Rút tiền thành công", String.valueOf(account.getBalance()));
     }
 
-    private ApiResponse<String> handleDeposit(Account account, double amount) {
+    public ApiResponse<String> handleDeposit(Account account, double amount) {
         // Tạo DTO để cập nhật số dư
         AccountDTO depositDTO = new AccountDTO();
         depositDTO.setBalance(amount);
-        balanceService.updateBalance(depositDTO, account, TransactionType.DEPOSIT);
+        balanceService.updateBalance(depositDTO, account, TransactionType.Deposit);
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(
                 account.getAccountNumber(),
                 amount,
-                TransactionType.DEPOSIT,
+                TransactionType.Deposit,
                 new Date()
         );
 
@@ -192,12 +190,12 @@ public class TransactionService {
         // Tạo DTO để trừ tiền tài khoản nguồn
         AccountDTO transferSourceDTO = new AccountDTO();
         transferSourceDTO.setBalance(amount);
-        balanceService.updateBalance(transferSourceDTO, sourceAccount, TransactionType.WITHDRAWAL);
+        balanceService.updateBalance(transferSourceDTO, sourceAccount, TransactionType.Withdrawal);
 
         // Tạo DTO để cộng tiền tài khoản đích
         AccountDTO transferTargetDTO = new AccountDTO();
         transferTargetDTO.setBalance(amount);
-        balanceService.updateBalance(transferTargetDTO, targetAccount, TransactionType.DEPOSIT);
+        balanceService.updateBalance(transferTargetDTO, targetAccount, TransactionType.Deposit);
 
         // Lưu giao dịch
         Transaction transactionSource = new Transaction(
@@ -210,7 +208,7 @@ public class TransactionService {
         Transaction transactionTarget = new Transaction(
                 targetAccount.getAccountNumber(),
                 amount,
-                TransactionType.DEPOSIT,
+                TransactionType.Deposit,
                 new Date()
         );
 
@@ -324,6 +322,31 @@ public class TransactionService {
         List<Transaction> transactions;
         try {
             transactions = transactionRepository.findByAccountNumber(accountNumber);
+        } catch (DataAccessException e) {
+            System.err.println("Lỗi cơ sở dữ liệu: " + e.getMessage());
+            return new ApiResponse<>("Lỗi khi truy xuất lịch sử giao dịch từ cơ sở dữ liệu", null);
+        } catch (Exception e) {
+            System.err.println("Lỗi không xác định: " + e.getMessage());
+            return new ApiResponse<>("Lỗi không xác định xảy ra", null);
+        }
+
+        // Kiểm tra nếu không có giao dịch nào
+        if (transactions == null || transactions.isEmpty()) {
+            return new ApiResponse<>("Không tìm thấy lịch sử giao dịch nào cho tài khoản này", null);
+        }
+
+        // Trả kết quả
+        return new ApiResponse<>("Lịch sử giao dịch", transactions);
+    }
+
+    public  ApiResponse<List<Transaction>> getTransactionHistoryByUser(String userId) {
+        if (userId == null || userId.isEmpty()) {
+            return new ApiResponse<>("Input không hợp lệ", null);
+        }
+
+        List<Transaction> transactions;
+        try {
+            transactions = transactionRepository.findByUserId(userId);
         } catch (DataAccessException e) {
             System.err.println("Lỗi cơ sở dữ liệu: " + e.getMessage());
             return new ApiResponse<>("Lỗi khi truy xuất lịch sử giao dịch từ cơ sở dữ liệu", null);
