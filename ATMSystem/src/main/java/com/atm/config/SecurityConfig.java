@@ -8,15 +8,23 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
+    private final AdminAuthenticationProvider adminAuthenticationProvider;
+
+    public SecurityConfig(AdminAuthenticationProvider adminAuthenticationProvider) {
+        this.adminAuthenticationProvider = adminAuthenticationProvider;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
@@ -34,19 +42,25 @@ public class SecurityConfig {
                         .requestMatchers("/accounts/{accountNumber}").authenticated()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/accounts").hasAuthority("ADMIN")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/transactions/withdraw", "/api/transactions/transfer").hasRole("USER") // Sử dụng hasRole thay vì hasAuthority
                         .requestMatchers("/api/transactions/history").hasRole("USER")
                         .requestMatchers("/api/transactions/send-otp", "/api/transactions/process-with-otp").permitAll()
-                        .requestMatchers("/backoffice/**").permitAll()
-                        .requestMatchers("/css/**").permitAll()
-                        .requestMatchers("/img/**").permitAll()
-                        .requestMatchers("/js/**").permitAll()
-                        .requestMatchers("/scss/**").permitAll()
-                        .requestMatchers("/vendor/**").permitAll()
+                        .requestMatchers("/login", "/css/**", "/js/**","/img/**","/scss/**","/vendor/**").permitAll()
+                        .requestMatchers("/admin/**").authenticated()
                         .anyRequest().authenticated()
                 )
+                .formLogin(login -> login
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/admin",true)
+                        .failureUrl("/login?error=true")
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll()
+                )
+                .authenticationProvider(adminAuthenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // Thêm bộ lọc JWT
 
         logger.info("Security configuration completed.");

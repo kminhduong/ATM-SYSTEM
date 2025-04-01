@@ -16,9 +16,10 @@
 
                     <tr>
                         <th>ID</th>
-                        <th>Name</th>
-                        <th>Phone</th>
+                        <th>Họ tên</th>
+                        <th>SĐT</th>
                         <th>Email</th>
+                        <th>Thao tác</th>
                     </tr>
                     </thead>
                     <tfoot>
@@ -27,6 +28,7 @@
                         <th>Name</th>
                         <th>Phone</th>
                         <th>Email</th>
+                        <th>Thao tác</th>
                     </tr>
                     </tfoot>
                     <tbody>
@@ -36,6 +38,15 @@
                         <td th:text="${customer.name}"></td>
                         <td th:text="${customer.phone}"></td>
                         <td th:text="${customer.email}"></td>
+                        <td>
+                            <button class="btn btn-info" th:attr="onclick='viewTransactionHistory(' + ${customer.userId} + ')'" >
+                                🕐 Lịch sử GD
+                            </button>
+
+                            <button class="btn btn-success" th:attr="onclick='viewAddMoney(' + ${customer.userId} + ')'" >
+                                💳 Nạp tiền
+                            </button>
+                        </td>
                     </tr>
                     </tbody>
                 </table>
@@ -44,3 +55,41 @@
     </div>
 
 </div>
+
+<div class="modal fade" id="transactionHistoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lịch sử giao dịch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul id="transactionList"></ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function viewTransactionHistory(customerId) {
+        // fetch('/api/transactions/history/' + customerId)
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         let list = document.getElementById("transactionList");
+        //         list.innerHTML = "";
+        //         data.forEach(tx => {
+        //             let li = document.createElement("li");
+        //             li.textContent = tx.date + ": " + tx.amount + " VND (" + tx.type + ")";
+        //             list.appendChild(li);
+        //         });
+        //         new bootstrap.Modal(document.getElementById("transactionHistoryModal")).show();
+        //     });
+
+        alert("Show Transaction modal")
+    }
+
+    function viewAddMoney(customerId) {
+
+        alert("Show Add money modal")
+    }
+</script>

@@ -1,0 +1,64 @@
+<div th:fragment="accountTable" class="container-fluid">
+
+    <!-- Page Heading -->
+    <h1 class="h3 mb-2 text-gray-800">Tài khoản</h1>
+
+
+    <!-- DataTales Example -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách tài khoản</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+
+                    <tr>
+                        <th>STK</th>
+                        <th>Họ tên</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>STK</th>
+                        <th>Họ tên</th>
+                        <th>Thao tác</th>
+                    </tr>
+                    </tfoot>
+                    <tbody>
+
+                    <tr th:each="account : ${accounts}">
+                        <td th:text="${account.accountNumber}">1</td>
+                        <td th:text="${account.fullname}"></td>
+                        <td>
+                            <button class="btn btn-info" th:attr="onclick='viewTransactionHistory(' + ${account.accountNumber} + ')'" >
+                                Đổi PIN
+                            </button>
+
+                            <button class="btn btn-info" th:attr="onclick='viewAddMoney(' + ${account.accountNumber} + ')'" >
+                                x
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+    function viewTransactionHistory(customerId) {
+
+        alert("Show Transaction modal")
+    }
+
+    function viewAddMoney(customerId) {
+
+        alert("Show Add money modal")
+    }
+</script>
