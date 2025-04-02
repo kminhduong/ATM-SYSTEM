@@ -125,7 +125,7 @@ public class TransferUI extends JFrame {
             }
         });
     }
-    private boolean callTransferAPI(String receiverAccountNumber, double amount) {
+    private boolean callTransferAPI(String targetAccountNumber, double amount) {
         try {
             // URL của API
             String apiUrl = "http://localhost:8080/api/transactions/transfer";
@@ -135,25 +135,33 @@ public class TransferUI extends JFrame {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Authorization", "Bearer " + authToken); // Thêm token xác thực nếu cần
+            connection.setRequestProperty("Authorization", "Bearer " + authToken); // Token cần được xác thực
             connection.setDoOutput(true);
 
-            // Tạo payload JSON
-            String jsonPayload = String.format("{\"receiverAccountNumber\": \"%s\", \"amount\": %.2f}", receiverAccountNumber, amount);
+            // Tạo payload JSON theo định dạng yêu cầu của API
+            String jsonPayload = String.format("{\"targetAccountNumber\": \"%s\", \"amount\": %.2f}", targetAccountNumber, amount);
 
-            // Gửi request
+            // Gửi payload JSON
             try (OutputStream os = connection.getOutputStream()) {
                 byte[] input = jsonPayload.getBytes("utf-8");
                 os.write(input, 0, input.length);
             }
 
-            // Đọc phản hồi
+            // Đọc phản hồi từ API
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                // Gọi API thành công
+                // Gọi API thành công, đọc phản hồi chi tiết nếu cần
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "utf-8"))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line.trim());
+                    }
+                    System.out.println("Success Response: " + response.toString());
+                }
                 return true;
             } else {
-                // Lấy thông báo lỗi từ phản hồi (nếu có)
+                // Đọc phản hồi lỗi
                 try (InputStream errorStream = connection.getErrorStream();
                      BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream, "utf-8"))) {
                     StringBuilder response = new StringBuilder();
@@ -171,5 +179,4 @@ public class TransferUI extends JFrame {
             return false;
         }
     }
-
 }
