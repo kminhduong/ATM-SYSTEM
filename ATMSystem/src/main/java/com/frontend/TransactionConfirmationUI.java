@@ -20,7 +20,7 @@ public class TransactionConfirmationUI extends JFrame {
         this.authToken = authToken;
 
         setTitle("ATM - Transaction Confirmation");
-        setSize(850, 800);
+        setSize(700, 600);
         setLocation(250, 0);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
@@ -34,23 +34,29 @@ public class TransactionConfirmationUI extends JFrame {
     }
 
     private void initializeComponents() {
-        l1 = new JLabel("TRANSACTION CONFIRMATION");
+        l1 = new JLabel("Transaction Conirmation");
         l1.setFont(new Font("Osward", Font.BOLD, 32));
-        l1.setBounds(150, 50, 600, 30);
+        l1.setBounds(125, 50, 600, 30);
 
         l2 = new JLabel("Amount to Withdraw:");
         l2.setFont(new Font("Arial", Font.PLAIN, 20));
-        l2.setBounds(250, 200, 200, 30);
+        l2.setBounds(150, 200, 200, 30);
 
         amountLabel = new JLabel(String.format("%.2f VND", amountToWithdraw));
         amountLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        amountLabel.setBounds(450, 200, 200, 30);
+        amountLabel.setBounds(400, 200, 200, 30);
 
         confirmButton = new JButton("Confirm");
-        confirmButton.setBounds(650, 400, 150, 50);
+        confirmButton.setBounds(500, 350, 150, 50);
 
         exitButton = new JButton("Exit");
-        exitButton.setBounds(500, 400, 150, 50);
+        exitButton.setBounds(300, 350, 150, 50);
+        JButton[] buttons = {confirmButton, exitButton};
+        for (JButton button : buttons) {
+            button.setFont(new Font("Arial", Font.BOLD, 24));
+            button.setBackground(Color.BLACK);
+            button.setForeground(Color.BLACK);
+        }
     }
 
     private void addComponentsToFrame() {
@@ -99,4 +105,5 @@ public class TransactionConfirmationUI extends JFrame {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 }

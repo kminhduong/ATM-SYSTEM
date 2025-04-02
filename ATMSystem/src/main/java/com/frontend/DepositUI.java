@@ -20,7 +20,7 @@ public class DepositUI extends JFrame {
     public DepositUI(String accountNumber, String authToken) {
         this.accountNumber = accountNumber;
         this.authToken = authToken;
-        setTitle("Deposit");
+        setTitle("ATM - Deposit");
         initializeComponents();
         addComponentsToFrame();
         addActionListeners();
@@ -28,7 +28,7 @@ public class DepositUI extends JFrame {
     }
 
     private void initializeComponents() {
-        l1 = new JLabel("ENTER THE AMOUNT TO DEPOSIT");
+        l1 = new JLabel("Enter The Amount To Deposit");
         l1.setFont(new Font("Osward", Font.BOLD, 32));
 
         tf1 = new JTextField(15);
@@ -48,16 +48,16 @@ public class DepositUI extends JFrame {
     private void addComponentsToFrame() {
         setLayout(null);
 
-        l1.setBounds(150, 150, 800, 40);
+        l1.setBounds(100, 50, 800, 40);
         add(l1);
 
-        tf1.setBounds(150, 250, 520, 60);
+        tf1.setBounds(150, 200, 400, 60);
         add(tf1);
 
-        b1.setBounds(350, 450, 150, 50);
+        b1.setBounds(300, 350, 150, 50);
         add(b1);
 
-        b2.setBounds(600, 450, 150, 50);
+        b2.setBounds(500, 350, 150, 50);
         add(b2);
     }
 
@@ -166,8 +166,9 @@ public class DepositUI extends JFrame {
 
     private void configureFrame() {
         getContentPane().setBackground(Color.WHITE);
-        setSize(850, 800);
-        setLocation(250, 200);
+        setSize(700, 600);
+        setLocation(250, 0);
         setVisible(true);
     }
+
 }

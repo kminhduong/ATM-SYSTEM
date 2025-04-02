@@ -23,53 +23,44 @@ public class TransactionsUI extends JFrame {
         l1 = new JLabel("Please Select Your Transaction");
         l1.setForeground(Color.BLACK);
         l1.setFont(new Font("Osward", Font.BOLD, 32));
-        l1.setBounds(150, 100, 700, 50);
+        l1.setBounds(100, 50, 700, 50);
 
-        b1 = new JButton("Cash Withdrawal");
-        b2 = new JButton("View Balance");
-        b3 = new JButton("Transfer");
-        b4 = new JButton("Deposit");
-        b5 = new JButton("Pin Change");
-        b6 = new JButton("Log Out");
+        b1 = createButton("Cash Withdrawal");
+        b2 = createButton("View Balance");
+        b3 = createButton("Transfer");
+        b4 = createButton("Deposit");
+        b5 = createButton("Pin Change");
+        b6 = createButton("Log Out");
 
         setLayout(null);
-        b1.setFont(new Font("Arial", Font.BOLD, 20));
-        b1.setBounds(50, 250, 300, 50);
-        add(b1);
-
-        b2.setFont(new Font("Arial", Font.BOLD, 20));
-        b2.setBounds(50, 350, 300, 50);
-        add(b2);
-
-        b3.setFont(new Font("Arial", Font.BOLD, 20));
-        b3.setBounds(50, 450, 300, 50);
-        add(b3);
-
-        b4.setFont(new Font("Arial", Font.BOLD, 20));
-        b4.setBounds(500, 250, 300, 50);
-        add(b4);
-
-        b5.setFont(new Font("Arial", Font.BOLD, 20));
-        b5.setBounds(500, 350, 300, 50);
-        add(b5);
-
-        b6.setFont(new Font("Arial", Font.BOLD, 20));
-        b6.setBounds(500, 450, 300, 50);
-        add(b6);
+        addButton(b1, 50, 175);
+        addButton(b2, 50, 275);
+        addButton(b3, 50, 375);
+        addButton(b4, 400, 175);
+        addButton(b5, 400, 275);
+        addButton(b6, 400, 375);
 
         add(l1);
 
-        setSize(850, 800);
+        setSize(700, 600);
         setLocation(250, 0);
         getContentPane().setBackground(Color.WHITE);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
-
+    private void addButton(JButton button, int x, int y) {
+        button.setBounds(x, y, 250, 50);
+        add(button);
+    }
+    private JButton createButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 20));
+        return button;
+    }
     private void addEventListeners() {
         b1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new CashWithdrawlUI(accountNumber,authToken).setVisible(true);
+                new CashWithdrawUI(accountNumber,authToken).setVisible(true);
                 dispose();
             }
         });

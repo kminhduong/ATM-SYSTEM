@@ -28,7 +28,7 @@ public class PinChangeUI extends JFrame {
     }
 
     private void initializeComponents() {
-        l1 = new JLabel("CHANGE YOUR PIN");
+        l1 = new JLabel("Change Your PIN");
         l1.setFont(new Font("Osward", Font.BOLD, 32));
 
         l2 = new JLabel("Enter current PIN:");
@@ -63,15 +63,15 @@ public class PinChangeUI extends JFrame {
     private void addComponentsToFrame() {
         setLayout(null);
 
-        l1.setBounds(250, 50, 400, 40);
+        l1.setBounds(200, 50, 400, 40);
         add(l1);
 
-        addComponent(l2, 200, 150, tf1, 250, 200);
-        addComponent(l3, 200, 250, tf2, 250, 300);
-        addComponent(l4, 200, 350, tf3, 250, 400);
+        addComponent(l2, 100, 100, tf1, 150, 150);
+        addComponent(l3, 100, 200, tf2, 150, 250);
+        addComponent(l4, 100, 300, tf3, 150, 350);
 
-        b1.setBounds(200, 500, 200, 50);
-        b2.setBounds(450, 500, 200, 50);
+        b1.setBounds(300, 460, 150, 50);
+        b2.setBounds(500, 460, 150, 50);
         add(b1);
         add(b2);
     }
@@ -151,8 +151,9 @@ public class PinChangeUI extends JFrame {
 
     private void configureFrame() {
         getContentPane().setBackground(Color.WHITE);
-        setSize(850, 800);
-        setLocation(250, 200);
+        setSize(700, 600);
+        setLocation(250, 0);
         setVisible(true);
     }
+
 }

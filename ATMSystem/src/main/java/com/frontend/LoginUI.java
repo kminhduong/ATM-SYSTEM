@@ -17,10 +17,10 @@ public class LoginUI extends JFrame {
     private JLabel l1, l2, l3;
     private JTextField tf1;
     private JPasswordField pf2;
-    private JButton b1, b2;
+    private JButton b1, b2, b3;
 
     public LoginUI() {
-        setTitle("AUTOMATED TELLER MACHINE");
+        setTitle("LOGIN ACCOUNT");
         initializeComponents();
         addComponentsToFrame();
         addActionListeners();
@@ -29,7 +29,7 @@ public class LoginUI extends JFrame {
 
     private void initializeComponents() {
         l1 = new JLabel("WELCOME TO ATM");
-        l1.setFont(new Font("Osward", Font.BOLD, 38));
+        l1.setFont(new Font("Osward", Font.BOLD, 32));
 
         l2 = new JLabel("Account Number:");
         l2.setFont(new Font("Raleway", Font.BOLD, 22));
@@ -52,31 +52,39 @@ public class LoginUI extends JFrame {
         b2.setBackground(Color.BLACK);
         b2.setForeground(Color.BLACK);
         b2.setFont(new Font("Arial", Font.BOLD, 20));
+
+        b3 = new JButton("Withdraw by OTP");
+        b3.setBackground(Color.BLACK);
+        b3.setForeground(Color.BLACK);
+        b3.setFont(new Font("Arial", Font.BOLD, 20));
     }
 
     private void addComponentsToFrame() {
         setLayout(null);
 
-        l1.setBounds(250, 50, 450, 40);
+        l1.setBounds(200, 50, 450, 40);
         add(l1);
 
-        l2.setBounds(50, 175, 300, 30);
+        l2.setBounds(100, 175, 300, 30);
         add(l2);
 
-        tf1.setBounds(300, 175, 230, 40);
+        tf1.setBounds(375, 175, 230, 40);
         add(tf1);
 
-        l3.setBounds(50, 270, 300, 30);
+        l3.setBounds(100, 270, 300, 30);
         add(l3);
 
-        pf2.setBounds(300, 270, 230, 40);
+        pf2.setBounds(375, 270, 230, 40);
         add(pf2);
 
-        b1.setBounds(100, 370, 150, 50);
+        b1.setBounds(175, 350, 150, 50);
         add(b1);
 
-        b2.setBounds(300, 370, 150, 50);
+        b2.setBounds(375, 350, 150, 50);
         add(b2);
+
+        b3.setBounds(200, 420, 300, 50);
+        add(b3);
     }
 
     private void addActionListeners() {
@@ -145,8 +153,8 @@ public class LoginUI extends JFrame {
 
     private void configureFrame() {
         getContentPane().setBackground(Color.WHITE);
-        setSize(850, 800);
-        setLocation(250, 200);
+        setSize(700, 600);
+        setLocation(250, 0);
         setVisible(true);
     }
 

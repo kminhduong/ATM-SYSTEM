@@ -2,8 +2,6 @@ package com.frontend;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class EnterAmountUI extends JFrame {
     private JLabel l1, l2;
@@ -23,7 +21,7 @@ public class EnterAmountUI extends JFrame {
     }
 
     private void initializeComponents() {
-        l1 = new JLabel("ENTER THE AMOUNT TO WITHDRAW");
+        l1 = new JLabel("Enter The Amount To Withdraw");
         l1.setFont(new Font("Osward", Font.BOLD, 32));
 
         tf1 = new JTextField(15);
@@ -42,25 +40,22 @@ public class EnterAmountUI extends JFrame {
     private void addComponentsToFrame() {
         setLayout(null);
 
-        l1.setBounds(125, 150, 800, 40);
+        l1.setBounds(100, 50, 800, 40);
         add(l1);
 
-        tf1.setBounds(175, 250, 520, 60);
+        tf1.setBounds(150, 200, 400, 60);
         add(tf1);
 
-        l2.setBounds(250, 320, 200, 30);
-        add(l2);
-
-        b1.setBounds(350, 450, 150, 50);
+        b1.setBounds(300, 350, 150, 50);
         add(b1);
 
-        b2.setBounds(600, 450, 150, 50);
+        b2.setBounds(500, 350, 150, 50);
         add(b2);
     }
 
     private void addActionListeners() {
         b1.addActionListener(ae -> {
-            new CashWithdrawlUI(accountNumber, authToken).setVisible(true);
+            new CashWithdrawUI(accountNumber, authToken).setVisible(true);
             dispose();
         });
 
@@ -82,8 +77,9 @@ public class EnterAmountUI extends JFrame {
 
     private void configureFrame() {
         getContentPane().setBackground(Color.WHITE);
-        setSize(850, 800);
-        setLocation(250, 200);
+        setSize(700, 600);
+        setLocation(250, 0);
         setVisible(true);
     }
+
 }

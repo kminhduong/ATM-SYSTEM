@@ -5,13 +5,14 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class CashWithdrawlUI extends JFrame {
+public class CashWithdrawUI extends JFrame {
+
     private JLabel l1;
     private JButton b1, b2, b3, b4, b5, b6, b7;
     private String accountNumber;
     private String authToken;
 
-    public CashWithdrawlUI(String accountNumber, String authToken) {
+    public CashWithdrawUI(String accountNumber, String authToken) {
         this.accountNumber = accountNumber;
         this.authToken = authToken;
         setTitle("ATM - Cash Withdrawal");
@@ -44,20 +45,20 @@ public class CashWithdrawlUI extends JFrame {
     private void addComponentsToFrame() {
         setLayout(null);
 
-        l1.setBounds(150, 50, 700, 50);
+        l1.setBounds(75, 50, 700, 50);
         add(l1);
 
-        addButton(b1, 50, 250);
-        addButton(b2, 50, 350);
-        addButton(b3, 50, 450);
-        addButton(b4, 500, 250);
-        addButton(b5, 500, 350);
-        addButton(b6, 500, 450);
-        addButton(b7, 500, 550);
+        addButton(b1, 50, 175);
+        addButton(b2, 50, 275);
+        addButton(b3, 50, 375);
+        addButton(b4, 400, 175);
+        addButton(b5, 400, 275);
+        addButton(b6, 400, 375);
+        addButton(b7, 400, 475);
     }
 
     private void addButton(JButton button, int x, int y) {
-        button.setBounds(x, y, 300, 50);
+        button.setBounds(x, y, 250, 50);
         add(button);
     }
 
@@ -68,28 +69,35 @@ public class CashWithdrawlUI extends JFrame {
         b4.addActionListener(createWithdrawListener(3000000));
         b5.addActionListener(createWithdrawListener(5000000));
 
-        b6.addActionListener(ae -> {
-            new EnterAmountUI(accountNumber, authToken).setVisible(true);
-            dispose();
+        b6.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                new EnterAmountUI(accountNumber,authToken).setVisible(true);  // Pass account number to EnterAmountUI
+                dispose();
+            }
         });
 
-        b7.addActionListener(ae -> {
-            new TransactionsUI(accountNumber, authToken).setVisible(true);
-            dispose();
+        b7.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                new TransactionsUI(accountNumber,authToken).setVisible(true);  // Return to main transaction screen
+                dispose();
+            }
         });
     }
 
     private ActionListener createWithdrawListener(double amount) {
-        return ae -> {
-            new TransactionConfirmationUI(accountNumber, amount, authToken).setVisible(true);
-            dispose();
+        return new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                new TransactionConfirmationUI(accountNumber, amount,authToken).setVisible(true);
+                dispose();
+            }
         };
     }
 
     private void configureFrame() {
-        setSize(850, 800);
+        setSize(700, 600);
         setLocation(250, 0);
         getContentPane().setBackground(Color.WHITE);
         setVisible(true);
     }
+
 }
