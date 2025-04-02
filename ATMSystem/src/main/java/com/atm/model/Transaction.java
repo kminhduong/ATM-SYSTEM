@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Date;
 
 @Entity
-@Table(name = "transaction")
+@Table(name = "Transaction")
 public class Transaction {
 
     @Id

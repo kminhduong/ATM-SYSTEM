@@ -29,18 +29,18 @@ public class BalanceService {
 
         // Kiểm tra xem tài khoản yêu cầu có phải của người dùng đang đăng nhập hay không
         if (!accountNumber.equals(loggedInAccountNumber)) {
-            throw new SecurityException("Bạn không có quyền truy cập số dư của tài khoản này.");
+            throw new SecurityException("You do not have access to this account's balance.");
         }
 
         return accountRepository.findByAccountNumber(accountNumber)
                 .map(Account::getBalance)
-                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại."));
+                .orElseThrow(() -> new RuntimeException("Account does not exist."));
     }
 
     public void updateBalance(AccountDTO accountDTO, Account account, TransactionType transactionType) {
         // Kiểm tra nếu số dư mới không tồn tại hoặc không hợp lệ
         if (accountDTO.getBalance() == null || accountDTO.getBalance() <= 0) {
-            throw new IllegalArgumentException("Số dư phải lớn hơn 0.");
+            throw new IllegalArgumentException("The remainder must be greater than 0.");
         }
 
         // Kiểm tra nếu Balance chưa tồn tại
@@ -57,15 +57,15 @@ public class BalanceService {
 
         // Xử lý logic dựa trên loại giao dịch
         switch (transactionType) {
-            case Deposit:
+            case DEPOSIT:
                 // Nạp tiền
                 updatedBalance += accountDTO.getBalance();
                 break;
 
-            case Withdrawal:
+            case WITHDRAWAL:
                 // Rút tiền
                 if (currentBalance < accountDTO.getBalance()) {
-                    throw new IllegalArgumentException("Số dư không đủ để thực hiện giao dịch rút tiền.");
+                    throw new IllegalArgumentException("Insufficient balance to make withdrawal transaction.");
                 }
                 updatedBalance -= accountDTO.getBalance();
                 break;
@@ -73,7 +73,7 @@ public class BalanceService {
             case WITHDRAWAL_OTP:
                 // Rút tiền OTP
                 if (currentBalance < accountDTO.getBalance()) {
-                    throw new IllegalArgumentException("Số dư không đủ để thực hiện giao dịch rút tiền OTP.");
+                    throw new IllegalArgumentException("Insufficient balance to make OTP withdrawal transaction.");
                 }
                 updatedBalance -= accountDTO.getBalance();
                 // Logic bổ sung như xác thực OTP có thể được thêm tại đây
@@ -81,10 +81,10 @@ public class BalanceService {
 
             case TRANSFER:
                 // Logic chuyển khoản cần được xử lý riêng
-                throw new UnsupportedOperationException("Chức năng chuyển khoản cần xử lý riêng cho tài khoản nguồn và đích.");
+                throw new UnsupportedOperationException("The transfer function needs to be handled separately for source and destination accounts.");
 
             default:
-                throw new IllegalArgumentException("Loại giao dịch không hợp lệ.");
+                throw new IllegalArgumentException("Invalid transaction type.");
         }
 
         // Cập nhật số dư mới
@@ -95,7 +95,7 @@ public class BalanceService {
 
     // Hàm lấy số tài khoản của người dùng hiện tại
     public String getLoggedInAccountNumber() {
-        System.out.println("🔍 Kiểm tra SecurityContextHolder: " + SecurityContextHolder.getContext().getAuthentication());
+        System.out.println("🔍 Check SecurityContextHolder: " + SecurityContextHolder.getContext().getAuthentication());
 
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
             System.out.println("❌ SecurityContextHolder is NULL!");

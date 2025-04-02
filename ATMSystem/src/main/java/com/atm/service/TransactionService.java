@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.atm.util.JwtUtil;
 
@@ -27,12 +26,10 @@ import java.util.Optional;
 @Service
 public class TransactionService {
 
-    private final AccountService accountService;
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final JwtUtil jwtUtil;
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
-    private final PasswordEncoder passwordEncoder;
     private final CredentialService credentialService;
     private final BalanceService balanceService;
     private final UserRepository userRepository;
@@ -42,19 +39,15 @@ public class TransactionService {
 
 
     @Autowired
-    public TransactionService(AccountService accountService,
-                              AccountRepository accountRepository,
+    public TransactionService(AccountRepository accountRepository,
                               TransactionRepository transactionRepository,
                               JwtUtil jwtUtil,
-                              PasswordEncoder passwordEncoder,
                               CredentialService credentialService,
                               BalanceService balanceService,
                               UserRepository userRepository) {  // Inject passwordEncoder vào constructor
-        this.accountService = accountService;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.jwtUtil = jwtUtil;
-        this.passwordEncoder = passwordEncoder;  // Gán giá trị cho passwordEncoder
         this.credentialService=credentialService;
         this.balanceService=balanceService;
         this.userRepository = userRepository;
@@ -92,35 +85,28 @@ public class TransactionService {
         // Xác minh token và quyền
         String accountNumber = jwtUtil.validateToken(token);
         if (accountNumber == null) {
-            return new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null);
+            return new ApiResponse<>("Token is invalid or expired", null);
         }
 
         String role = jwtUtil.getRoleFromToken(token);
         if (!"USER".equals(role)) {
-            return new ApiResponse<>("Bạn không có quyền thực hiện giao dịch này", null);
+            return new ApiResponse<>("You do not have permission to perform this transaction.", null);
         }
 
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
         if (accountOpt.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy tài khoản", null);
+            return new ApiResponse<>("Account not found", null);
         }
 
         Account account = accountOpt.get();
 
         // Thực hiện giao dịch
-        switch (transactionType) {
-            case Withdrawal:
-                return handleWithdraw(account, amount);
-
-            case Deposit:
-                return handleDeposit(account, amount);
-
-            case TRANSFER:
-                return handleTransfer(account, targetAccountNumber, amount);
-
-            default:
-                return new ApiResponse<>("Loại giao dịch không hợp lệ", null);
-        }
+        return switch (transactionType) {
+            case WITHDRAWAL -> handleWithdraw(account, amount);
+            case DEPOSIT -> handleDeposit(account, amount);
+            case TRANSFER -> handleTransfer(account, targetAccountNumber, amount);
+            default -> new ApiResponse<>("Loại giao dịch không hợp lệ", null);
+        };
     }
 
     private ApiResponse<String> handleWithdraw(Account account, double amount) {
@@ -131,20 +117,21 @@ public class TransactionService {
         // Tạo DTO để cập nhật số dư
         AccountDTO withdrawalDTO = new AccountDTO();
         withdrawalDTO.setBalance(amount);
-        balanceService.updateBalance(withdrawalDTO, account, TransactionType.Withdrawal);
+        balanceService.updateBalance(withdrawalDTO, account, TransactionType.WITHDRAWAL);
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(
                 account.getAccountNumber(),
                 amount,
-                TransactionType.Withdrawal,
+                TransactionType.WITHDRAWAL,
                 new Date()
         );
 
         try {
             transactionRepository.save(transaction);
         } catch (Exception e) {
-            e.printStackTrace();
+            // Thay thế printStackTrace bằng ghi log
+            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
             return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
         }
 
@@ -155,20 +142,21 @@ public class TransactionService {
         // Tạo DTO để cập nhật số dư
         AccountDTO depositDTO = new AccountDTO();
         depositDTO.setBalance(amount);
-        balanceService.updateBalance(depositDTO, account, TransactionType.Deposit);
+        balanceService.updateBalance(depositDTO, account, TransactionType.DEPOSIT);
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(
                 account.getAccountNumber(),
                 amount,
-                TransactionType.Deposit,
+                TransactionType.DEPOSIT,
                 new Date()
         );
 
         try {
             transactionRepository.save(transaction);
         } catch (Exception e) {
-            e.printStackTrace();
+            // Thay printStackTrace bằng logger.error
+            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
             return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
         }
 
@@ -190,12 +178,12 @@ public class TransactionService {
         // Tạo DTO để trừ tiền tài khoản nguồn
         AccountDTO transferSourceDTO = new AccountDTO();
         transferSourceDTO.setBalance(amount);
-        balanceService.updateBalance(transferSourceDTO, sourceAccount, TransactionType.Withdrawal);
+        balanceService.updateBalance(transferSourceDTO, sourceAccount, TransactionType.WITHDRAWAL);
 
         // Tạo DTO để cộng tiền tài khoản đích
         AccountDTO transferTargetDTO = new AccountDTO();
         transferTargetDTO.setBalance(amount);
-        balanceService.updateBalance(transferTargetDTO, targetAccount, TransactionType.Deposit);
+        balanceService.updateBalance(transferTargetDTO, targetAccount, TransactionType.DEPOSIT);
 
         // Lưu giao dịch
         Transaction transactionSource = new Transaction(
@@ -208,7 +196,7 @@ public class TransactionService {
         Transaction transactionTarget = new Transaction(
                 targetAccount.getAccountNumber(),
                 amount,
-                TransactionType.Deposit,
+                TransactionType.DEPOSIT,
                 new Date()
         );
 
@@ -216,7 +204,8 @@ public class TransactionService {
             transactionRepository.save(transactionSource);
             transactionRepository.save(transactionTarget);
         } catch (Exception e) {
-            e.printStackTrace();
+            // Thay thế printStackTrace bằng logger.error
+            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
             return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
         }
 
@@ -277,7 +266,6 @@ public class TransactionService {
         if (userOpt.isEmpty()) {
             return new ApiResponse<>("Không tìm thấy thông tin người dùng cho tài khoản này.", null);
         }
-        String phoneNumber = userOpt.get().getPhone();
 
         // Kiểm tra số dư tài khoản
         if (request.getAmount() > account.getBalance()) {

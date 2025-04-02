@@ -1,9 +1,9 @@
 package com.atm.model;
 
 public enum TransactionType {
-    Withdrawal,  // Rút tiền
-    Deposit,     // Nạp tiền
-    TRANSFER,     // Chuyển khoản (bổ sung cho đúng CSDL)
+    WITHDRAWAL,  // Rút tiền
+    DEPOSIT,     // Nạp tiền
+    TRANSFER,    // Chuyển khoản
     WITHDRAWAL_OTP;
     public static TransactionType fromString(String value) {
         if (value == null || value.isEmpty()) {
@@ -16,7 +16,7 @@ public enum TransactionType {
         try {
             return TransactionType.fromString(dbValue);
         } catch (IllegalArgumentException e) {
-            System.err.println("Giá trị không hợp lệ trong cơ sở dữ liệu: " + dbValue);
+            System.err.println("Invalid values in the database: " + dbValue);
             throw e; // Hoặc xử lý lỗi nếu cần
         }
     }

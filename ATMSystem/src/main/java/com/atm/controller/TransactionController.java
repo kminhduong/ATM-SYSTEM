@@ -5,8 +5,6 @@ import com.atm.dto.ApiResponse;
 import com.atm.model.Account;
 import com.atm.model.Transaction;
 import com.atm.model.TransactionType;
-import com.atm.repository.AccountRepository;
-import com.atm.repository.TransactionRepository;
 import com.atm.service.AccountService;
 import com.atm.service.TransactionService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,27 +29,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController {
 
     private final AccountService accountService;
-    private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
     private final TransactionService transactionService;
     private final JwtUtil jwtUtil;
-    private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
 
     @Autowired
     public TransactionController(AccountService accountService,
-                                 AccountRepository accountRepository,
-                                 TransactionRepository transactionRepository,
                                  TransactionService transactionService,
                                  JwtUtil jwtUtil) {
         this.accountService = accountService;
-        this.accountRepository = accountRepository;
-        this.transactionRepository = transactionRepository;
         this.transactionService = transactionService;
         this.jwtUtil = jwtUtil;
-    }
-
-    private String getCurrentAccountNumber(String token) {
-        return jwtUtil.validateToken(token); // Trả về accountNumber từ token
     }
 
     // API Đăng nhập
@@ -101,7 +86,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.Withdrawal, null);
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.WITHDRAWAL, null);
         return buildResponse(response);
     }
 
@@ -117,7 +102,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.Deposit, null);
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.DEPOSIT, null);
         return buildResponse(response);
     }
 
@@ -153,7 +138,7 @@ public class TransactionController {
         ApiResponse<String> response = transactionService.sendOtpForWithdrawal(accountNumber);
 
         // Xử lý kết quả
-        if ("OTP đã được gửi đến số điện thoại của bạn.".equals(response.getMessage())) {
+        if ("OTP has been sent to your phone number.".equals(response.getMessage())) {
             return ResponseEntity.ok(response); // Thành công
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response); // Lỗi
@@ -166,7 +151,7 @@ public class TransactionController {
         ApiResponse<String> response = transactionService.processWithdrawWithOtp(request);
 
         // Trả kết quả về cho client
-        if ("Giao dịch rút tiền thành công.".equals(response.getMessage())) {
+        if ("Successful withdrawal transaction.".equals(response.getMessage())) {
             return ResponseEntity.ok(response); // Thành công
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response); // Lỗi
@@ -184,13 +169,12 @@ public class TransactionController {
         String accountNumber = jwtUtil.validateToken(token);
 
         if (accountNumber == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Invalid or expired tokens", null));
         }
 
         ApiResponse<List<Transaction>> response = transactionService.getTransactionHistory(accountNumber);
         return ResponseEntity.ok(response);
     }
-
 
     // API lấy lịch sử giao dịch theo user
     @GetMapping("")
@@ -198,7 +182,7 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<List<Transaction>>> getUserTransactionHistory(@PathVariable("userId") String userId) {
 
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Input không hợp lệ", null));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Invalid input", null));
         }
         ApiResponse<List<Transaction>> response = transactionService.getTransactionHistoryByUser(userId);
         return ResponseEntity.ok(response);
@@ -213,14 +197,13 @@ public class TransactionController {
         String amount = body.get("amount").toString();
 
         if (accId == null || amount == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Input không hợp lệ", null));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Invalid input", null));
         }
 
         Optional<Account> account = Optional.ofNullable(accountService.getAccountById(accId));
         if (!account.isPresent()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Account not found", null));
         }
-
 
         ApiResponse<String> response = transactionService.handleDeposit(account.get(), Double.parseDouble(amount));
         return buildResponse(response);

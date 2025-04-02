@@ -3,11 +3,7 @@ package com.atm.controller;
 import com.atm.dto.AccountDTO;
 import com.atm.dto.ApiResponse;
 import com.atm.model.Account;
-import com.atm.model.Transaction;
-import com.atm.model.User;
-import com.atm.repository.UserRepository;
 import com.atm.service.AccountService;
-import com.atm.service.BalanceService;
 import com.atm.service.TransactionService;
 import com.atm.service.UserService;
 import com.atm.util.JwtUtil;
@@ -28,21 +24,18 @@ public class AccountController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
     private final TransactionService transactionService;
-    private final UserRepository userRepository; // 🔹 Thêm biến này
-    private final BalanceService balanceService;
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AccountController.class);
 
     @Autowired
-    public AccountController(JwtUtil jwtUtil, AccountService accountService,
-                             UserRepository userRepository, TransactionService transactionService,
-                             UserService userService, BalanceService balanceService) {
+    public AccountController(JwtUtil jwtUtil,
+                             AccountService accountService,
+                             TransactionService transactionService,
+                             UserService userService) {
         this.jwtUtil = jwtUtil;
         this.accountService = accountService;
-        this.userRepository = userRepository; // 🔹 Inject vào constructor
         this.transactionService = transactionService;
         this.userService = userService;
-        this.balanceService = balanceService;
     }
 
     @PostMapping("/register")
@@ -56,13 +49,13 @@ public class AccountController {
             // Đăng ký tài khoản
             accountService.registerAccount(accountDTO);
 
-            return ResponseEntity.ok("Tài khoản đã được đăng ký thành công!");
+            return ResponseEntity.ok("The account has been successfully registered!");
         } catch (IllegalArgumentException e) {
             logger.error("Error while registering account: " + e.getMessage());
             return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
         } catch (Exception e) {
             logger.error("Unexpected error: " + e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi khi đăng ký tài khoản!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred when registering an account!");
         }
     }
 
@@ -79,17 +72,10 @@ public class AccountController {
     public ResponseEntity<String> updateAccount(@RequestBody AccountDTO accountDTO, @RequestHeader("Authorization") String authHeader) {
         String accountNumber = jwtUtil.validateToken(authHeader.substring(7));
         if (accountNumber == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token không hợp lệ!");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid tokens!");
         }
         accountService.updateAccount(accountDTO, accountNumber);
-        return ResponseEntity.ok("Cập nhật tài khoản thành công!");
-    }
-
-    @GetMapping("/balance")
-    public ResponseEntity<Double> getBalance() {
-        String accountNumber = balanceService.getLoggedInAccountNumber();
-        return accountNumber != null ? ResponseEntity.ok(balanceService.getBalance(accountNumber))
-                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        return ResponseEntity.ok("Account update successful!");
     }
 
     @GetMapping("/customers")
@@ -105,7 +91,7 @@ public class AccountController {
         if (jwtUtil.isTokenValid(token)) {
             jwtUtil.generateToken(jwtUtil.validateToken(token), "USER", 1);
         }
-        return ResponseEntity.ok("Đăng xuất thành công!");
+        return ResponseEntity.ok("Log out successfully!");
     }
 
     // API lấy lịch sử giao dịch theo user

@@ -12,20 +12,8 @@ public class Account {
     @Column(name = "account_number", length = 50)
     private String accountNumber;
 
-    @OneToOne
-    @JoinColumn(name = "account_number", referencedColumnName = "account_number", insertable = false, updatable = false)
-    @JsonIgnore
-    private Credential credential;
-
-    @Column(name = "username", length = 50, nullable = false, unique = true)
-    private String username;
-
-    @Column(name = "full_name", length = 100, nullable = false)
-    private String fullName;
-
-
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false) // Ánh xạ chính xác với cột user_id trong cơ sở dữ liệu
     @JsonIgnore
     private User user;
 
@@ -39,14 +27,15 @@ public class Account {
     @JsonIgnore
     private AccountStatus status;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private Balance balanceEntity;
+    @Column(name = "username", length = 50, nullable = false, unique = true)
+    private String username;
+
+    @Column(name = "full_name", length = 100, nullable = false)
+    private String fullName;
 
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
 
-    // Phương thức tự động cập nhật thời gian
     @PreUpdate
     protected void onUpdate() {
         this.lastUpdated = LocalDateTime.now();
@@ -55,11 +44,22 @@ public class Account {
     @Column
     private String role;  // Không ràng buộc, có thể NULL
 
+    @OneToOne
+    @JoinColumn(name = "account_number", referencedColumnName = "account_number", insertable = false, updatable = false)
+    @JsonIgnore
+    private Credential credential;
+
+    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private Balance balanceEntity;
+
     // ✅ Constructor không tham số (BẮT BUỘC cho JPA)
     public Account() {}
 
     // ✅ Constructor đầy đủ
-    public Account(String accountNumber, String username, String fullName, User user, AccountType accountType, AccountStatus status, double balance, String pin, String role) {
+    public Account(String accountNumber, String username,
+                   String fullName, User user, AccountType accountType,
+                   AccountStatus status, double balance, String pin, String role) {
         this.accountNumber = accountNumber;
         this.username = username;
         this.fullName = fullName;
@@ -149,7 +149,7 @@ public class Account {
 
     public void setBalance(double balance) {
         if (balanceEntity == null) {
-            balanceEntity = new Balance();
+            balanceEntity = new Balance(); // Khởi tạo đối tượng Balance nếu chưa tồn tại
             balanceEntity.setAccount(this);
         }
         balanceEntity.setBalance(balance);
