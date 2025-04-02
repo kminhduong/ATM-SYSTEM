@@ -89,7 +89,7 @@ public class LoginUI extends JFrame {
         String accountNumber = tf1.getText();
         String pin = new String(pf2.getPassword());
 
-        if (accountNumber.equals("123456") && pin.equals("1234")) {
+        if (accountNumber.equals("0000000000") && pin.equals("000000")) {
             JOptionPane.showMessageDialog(null, "Login Successful!");
             new TransactionsUI(accountNumber).setVisible(true);
             dispose();

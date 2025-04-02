@@ -58,7 +58,7 @@ public class Main {
             logger.info("Admin user created successfully!");
 
             // Mã hóa PIN trước khi lưu vào database
-            String hashedPin = passwordEncoder.encode("123456");
+//            String hashedPin = passwordEncoder.encode("123456");
 
             AccountDTO adminDTO = new AccountDTO(
                     "0000000000",

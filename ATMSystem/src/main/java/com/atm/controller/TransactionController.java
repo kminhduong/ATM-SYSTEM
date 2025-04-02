@@ -8,6 +8,7 @@ import com.atm.model.TransactionType;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.TransactionRepository;
 import com.atm.service.AccountService;
+import com.atm.service.BalanceService;
 import com.atm.service.TransactionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,7 @@ public class TransactionController {
     private final TransactionRepository transactionRepository;
     private final TransactionService transactionService;
     private final JwtUtil jwtUtil;
+    private final BalanceService balanceService;
     private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
 
     @Autowired
@@ -44,11 +46,12 @@ public class TransactionController {
                                  AccountRepository accountRepository,
                                  TransactionRepository transactionRepository,
                                  TransactionService transactionService,
-                                 JwtUtil jwtUtil) {
+                                 JwtUtil jwtUtil,BalanceService balanceService) {
         this.accountService = accountService;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.transactionService = transactionService;
+        this.balanceService = balanceService;
         this.jwtUtil = jwtUtil;
     }
 
@@ -224,5 +227,11 @@ public class TransactionController {
 
         ApiResponse<String> response = transactionService.handleDeposit(account.get(), Double.parseDouble(amount));
         return buildResponse(response);
+    }
+    @GetMapping("/balance")
+    public ResponseEntity<Double> getBalance() {
+        String accountNumber = balanceService.getLoggedInAccountNumber();
+        return accountNumber != null ? ResponseEntity.ok(balanceService.getBalance(accountNumber))
+                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 }

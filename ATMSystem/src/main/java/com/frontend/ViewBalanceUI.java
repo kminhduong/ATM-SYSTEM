@@ -81,7 +81,7 @@ public class ViewBalanceUI extends JFrame {
 
     public void loadAccountDetails() {
         try {
-            URL url = new URL("http://localhost:8080/accounts/" + accountNumber);
+            URL url = new URL("http://localhost:8080/transactions/balance" + accountNumber);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");

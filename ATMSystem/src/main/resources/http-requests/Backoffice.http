@@ -40,8 +40,8 @@ Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
-  "accountNumber": "11111",
-  "pin": "555555",
+  "accountNumber": "0000000000",
+  "pin": "000000",
   "balance": "100000000"
 }
 
