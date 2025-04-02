@@ -1,7 +1,9 @@
 package com.atm.controller;
 
 import com.atm.dto.AccountDTO;
+import com.atm.dto.ApiResponse;
 import com.atm.model.Account;
+import com.atm.model.Transaction;
 import com.atm.model.User;
 import com.atm.repository.UserRepository;
 import com.atm.service.AccountService;
@@ -104,5 +106,17 @@ public class AccountController {
             jwtUtil.generateToken(jwtUtil.validateToken(token), "USER", 1);
         }
         return ResponseEntity.ok("Đăng xuất thành công!");
+    }
+
+    // API lấy lịch sử giao dịch theo user
+    @RequestMapping(value="/get-by-user/{userId}", method = RequestMethod.GET)
+    public ResponseEntity<ApiResponse<List<Account>>> getAccountsByUser(@PathVariable("userId") String userId) {
+
+        if (userId == null) {
+            return ResponseEntity.internalServerError().body(null);
+        }
+        ApiResponse<List<Account>> response = accountService.getAccountsByUserId(userId);
+        return ResponseEntity.ok(response);
+
     }
 }

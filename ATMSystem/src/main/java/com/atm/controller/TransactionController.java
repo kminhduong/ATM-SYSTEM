@@ -2,6 +2,7 @@ package com.atm.controller;
 
 import com.atm.dto.*;
 import com.atm.dto.ApiResponse;
+import com.atm.model.Account;
 import com.atm.model.Transaction;
 import com.atm.model.TransactionType;
 import com.atm.repository.AccountRepository;
@@ -17,6 +18,8 @@ import com.atm.util.JwtUtil;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -98,7 +101,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.WITHDRAWAL, null);
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.Withdrawal, null);
         return buildResponse(response);
     }
 
@@ -114,7 +117,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.DEPOSIT, null);
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.Deposit, null);
         return buildResponse(response);
     }
 
@@ -186,5 +189,40 @@ public class TransactionController {
 
         ApiResponse<List<Transaction>> response = transactionService.getTransactionHistory(accountNumber);
         return ResponseEntity.ok(response);
+    }
+
+
+    // API lấy lịch sử giao dịch theo user
+    @GetMapping("")
+    @RequestMapping(value="/get-user-transaction/{userId}", method = RequestMethod.GET)
+    public ResponseEntity<ApiResponse<List<Transaction>>> getUserTransactionHistory(@PathVariable("userId") String userId) {
+
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Input không hợp lệ", null));
+        }
+        ApiResponse<List<Transaction>> response = transactionService.getTransactionHistoryByUser(userId);
+        return ResponseEntity.ok(response);
+
+    }
+
+    // API nạp tiền qua Admin
+    @PostMapping("/admin-deposit")
+    public ResponseEntity<ApiResponse<String>> depositByAdmin(@RequestBody Map<String, Object> body) {
+
+        String accId = body.get("account").toString();
+        String amount = body.get("amount").toString();
+
+        if (accId == null || amount == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Input không hợp lệ", null));
+        }
+
+        Optional<Account> account = Optional.ofNullable(accountService.getAccountById(accId));
+        if (!account.isPresent()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Account not found", null));
+        }
+
+
+        ApiResponse<String> response = transactionService.handleDeposit(account.get(), Double.parseDouble(amount));
+        return buildResponse(response);
     }
 }

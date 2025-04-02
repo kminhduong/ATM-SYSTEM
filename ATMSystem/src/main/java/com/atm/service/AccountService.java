@@ -1,6 +1,7 @@
 package com.atm.service;
 
 import com.atm.dto.AccountDTO;
+import com.atm.dto.ApiResponse;
 import com.atm.model.*;
 import com.atm.repository.AccountRepository;
 import com.atm.repository.BalanceRepository;
@@ -10,14 +11,12 @@ import com.atm.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -146,7 +145,7 @@ public class AccountService {
         // Nếu cập nhật số dư
         if (accountDTO.getBalance() != null) {
             checkUpdatePermission(accountNumber, accountDTO, true);
-            balanceService.updateBalance(accountDTO, account, TransactionType.DEPOSIT);
+            balanceService.updateBalance(accountDTO, account, TransactionType.Deposit);
         }
 
         // Cập nhật thông tin bảo mật (Credential)
@@ -249,4 +248,35 @@ public class AccountService {
 //        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
 //        return count != null && count > 0;
 //    }
+
+
+    public ApiResponse<List<Account>> getAccountsByUserId(String userId) {
+
+        List<Account> accounts;
+        try {
+            accounts = accountRepository.findByUserId(userId);
+        } catch (DataAccessException e) {
+            System.err.println("Lỗi cơ sở dữ liệu: " + e.getMessage());
+            return new ApiResponse<>("Lỗi khi truy xuất lịch sử giao dịch từ cơ sở dữ liệu", null);
+        } catch (Exception e) {
+            System.err.println("Lỗi không xác định: " + e.getMessage());
+            return new ApiResponse<>("Lỗi không xác định xảy ra", null);
+        }
+
+        // Kiểm tra nếu không có giao dịch nào
+        if (accounts == null || accounts.isEmpty()) {
+            return new ApiResponse<>("Không tìm thấy tài khoản nào cho user này", null);
+        }
+        return new ApiResponse<>("success", accounts);
+    }
+
+    public Account getAccountById(String id) {
+        Optional<Account> accountOptional = accountRepository.findById(id);
+        if (accountOptional.isPresent()) {
+            return accountOptional.get(); // Returns the User if found
+        } else {
+            throw new RuntimeException("Account not found with ID: " + id);
+        }
+    }
+
 }

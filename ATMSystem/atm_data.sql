@@ -1,6 +1,6 @@
-drop database testatm_db;
-create database testatm_db;
-USE testatm_db;
+-- drop database testatm_db;
+create database atm_db;
+USE atm_db;
 
 -- Bảng User
 CREATE TABLE User (

@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-import static com.atm.model.TransactionType.*;
-
 @Service
 public class BalanceService {
     private final AccountRepository accountRepository;
@@ -59,12 +57,12 @@ public class BalanceService {
 
         // Xử lý logic dựa trên loại giao dịch
         switch (transactionType) {
-            case DEPOSIT:
+            case Deposit:
                 // Nạp tiền
                 updatedBalance += accountDTO.getBalance();
                 break;
 
-            case WITHDRAWAL:
+            case Withdrawal:
                 // Rút tiền
                 if (currentBalance < accountDTO.getBalance()) {
                     throw new IllegalArgumentException("Số dư không đủ để thực hiện giao dịch rút tiền.");
