@@ -16,22 +16,25 @@
 
                     <tr>
                         <th>STK</th>
-                        <th>Họ tên</th>
+                        <th>Loại TK</th>
+                        <th>Trạng thái</th>
                         <th>Thao tác</th>
                     </tr>
                     </thead>
                     <tfoot>
                     <tr>
                         <th>STK</th>
-                        <th>Họ tên</th>
+                        <th>Loại TK</th>
+                        <th>Trạng thái</th>
                         <th>Thao tác</th>
                     </tr>
                     </tfoot>
                     <tbody>
 
                     <tr th:each="account : ${accounts}">
-                        <td th:text="${account.accountNumber}">1</td>
-                        <td th:text="${account.fullname}"></td>
+                        <td th:text="${account.accountNumber}"></td>
+                        <td th:text="${account.accountType}"></td>
+                        <td th:text="${account.status}"></td>
                         <td>
                             <button class="btn btn-info" th:attr="onclick='viewTransactionHistory(' + ${account.accountNumber} + ')'" >
                                 Đổi PIN
@@ -73,9 +76,6 @@
         </div>
     </div>
 </div>
-</div>
-
-
 
 <script>
     function viewTransactionHistory(customerId) {

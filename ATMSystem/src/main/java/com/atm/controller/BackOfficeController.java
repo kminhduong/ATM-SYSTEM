@@ -53,6 +53,11 @@ public class BackOfficeController {
 
     @GetMapping("/admin/customers")
     public String viewCustomerPage(Model model) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        model.addAttribute("username", username);
+
         List<User> userList = userService.getAllCustomers();
         model.addAttribute("customers", userList);
         model.addAttribute("content", "fragments/customer");
@@ -61,10 +66,15 @@ public class BackOfficeController {
 
     @GetMapping("/admin/accounts")
     public String viewAccountPage(Model model) {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        model.addAttribute("username", username);
+
+
         List<Account> accounts = accountService.getAllCustomers();
-        
         model.addAttribute("accounts", accounts);
-        model.addAttribute("content", "fragments/customer");
+        model.addAttribute("content", "fragments/account");
         return "index";
     }
 }

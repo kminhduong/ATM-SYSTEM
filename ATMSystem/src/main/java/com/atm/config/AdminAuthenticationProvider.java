@@ -44,7 +44,7 @@ public class AdminAuthenticationProvider implements AuthenticationProvider {
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 String token = response.getBody().getToken(); // Token trả về từ API
-                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ADMIN"));
+                List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
 
                 UserDetails userDetails = new User(username, password, authorities);
