@@ -1,9 +1,17 @@
 package com.frontend;
 
+import org.json.JSONObject;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
 
 public class LoginUI extends JFrame {
     private JLabel l1, l2, l3;
@@ -89,12 +97,44 @@ public class LoginUI extends JFrame {
         String accountNumber = tf1.getText();
         String pin = new String(pf2.getPassword());
 
-        if (accountNumber.equals("0000000000") && pin.equals("000000")) {
-            JOptionPane.showMessageDialog(null, "Login Successful!");
-            new TransactionsUI(accountNumber).setVisible(true);
-            dispose();
-        } else {
-            JOptionPane.showMessageDialog(null, "Invalid Account Number or PIN");
+        try {
+            URL url = new URL("http://localhost:8080/api/transactions/login");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+
+            String jsonBody = String.format("{\"accountNumber\":\"%s\", \"pin\":\"%s\"}", accountNumber, pin);
+            try (OutputStream os = connection.getOutputStream()) {
+                os.write(jsonBody.getBytes("UTF-8"));
+                os.flush();
+            }
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String output;
+                while ((output = br.readLine()) != null) {
+                    response.append(output);
+                }
+                br.close();
+                connection.disconnect();
+
+                JSONObject jsonResponse = new JSONObject(response.toString());
+                String authToken = jsonResponse.getString("token");
+
+                JOptionPane.showMessageDialog(null, "Login Successful!");
+
+                new TransactionsUI(accountNumber, authToken).setVisible(true); // Truyền token
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(null, "Invalid Account Number or PIN", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
 

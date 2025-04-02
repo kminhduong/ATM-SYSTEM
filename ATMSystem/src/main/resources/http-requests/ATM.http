@@ -3,8 +3,8 @@ POST http://localhost:8080/api/transactions/login
 Content-Type: application/json
 
 {
-  "accountNumber": "11111",
-  "pin": "555555"
+  "accountNumber": "0000000000",
+  "pin": "000000"
 }
 
 > {% client.global.set("authToken", response.body.token); %}

@@ -10,9 +10,11 @@ public class TransactionsUI extends JFrame {
     private JLabel l1;
     private JButton b1, b2, b3, b4, b5, b6;
     private String accountNumber;
+    private String authToken;
 
-    public TransactionsUI(String accountNumber) {
+    public TransactionsUI(String accountNumber,String authToken) {
         this.accountNumber = accountNumber;
+        this.authToken = authToken;
         initializeUI();
         addEventListeners();
     }
@@ -67,14 +69,14 @@ public class TransactionsUI extends JFrame {
     private void addEventListeners() {
         b1.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new CashWithdrawlUI(accountNumber).setVisible(true);
+                new CashWithdrawlUI(accountNumber,authToken).setVisible(true);
                 dispose();
             }
         });
 
         b2.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new ViewBalanceUI(accountNumber).setVisible(true);
+                new ViewBalanceUI(accountNumber, authToken).setVisible(true);
                 dispose();
             }
         });
@@ -88,14 +90,14 @@ public class TransactionsUI extends JFrame {
 
         b4.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new DepositUI(accountNumber).setVisible(true);
+                new DepositUI(accountNumber,authToken).setVisible(true);
                 dispose();
             }
         });
 
         b5.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new PinChangeUI(accountNumber).setVisible(true);
+                new PinChangeUI(accountNumber,authToken).setVisible(true);
                 dispose();
             }
         });

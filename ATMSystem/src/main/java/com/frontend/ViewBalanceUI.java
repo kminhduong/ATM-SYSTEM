@@ -14,9 +14,11 @@ public class ViewBalanceUI extends JFrame {
     JLabel l1, l2, l3, l4, accountNumberLabel, fullNameLabel, balanceLabel;
     JButton exitButton;
     private String accountNumber;
+    private String authToken;
 
-    public ViewBalanceUI(String accountNumber) {
+    public ViewBalanceUI(String accountNumber, String authToken) {
         this.accountNumber = accountNumber;
+        this.authToken = authToken;
 
         setTitle("ATM - View Balance");
 //        setSize(600, 400);
@@ -71,7 +73,7 @@ public class ViewBalanceUI extends JFrame {
 
         exitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                new TransactionsUI(accountNumber).setVisible(true);
+                new TransactionsUI(accountNumber,authToken).setVisible(true);
                 dispose();
             }
         });
@@ -81,28 +83,33 @@ public class ViewBalanceUI extends JFrame {
 
     public void loadAccountDetails() {
         try {
-            URL url = new URL("http://localhost:8080/transactions/balance" + accountNumber);
+            URL url = new URL("http://localhost:8080/api/transactions/balance");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+            // Cấu hình yêu cầu HTTP GET và truyền token qua header
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + authToken);
 
-            if (conn.getResponseCode() != 200) {
+            // Kiểm tra mã phản hồi HTTP
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
             }
 
+            // Đọc phản hồi từ API
             BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
-            String output;
             StringBuilder response = new StringBuilder();
+            String output;
             while ((output = br.readLine()) != null) {
                 response.append(output);
             }
+            br.close();
             conn.disconnect();
 
-            JSONObject accountData = new JSONObject(response.toString());
-            String accountHolderName = accountData.getString("accountHolderName");
-            double balance = accountData.getDouble("balance");
+            // Xử lý dữ liệu phản hồi
+            double balance = Double.parseDouble(response.toString()); // API trả về số dư dạng Double
 
-            fullNameLabel.setText(accountHolderName);
+            // Cập nhật giao diện
             balanceLabel.setText(String.format("%.2f VND", balance));
 
         } catch (Exception e) {

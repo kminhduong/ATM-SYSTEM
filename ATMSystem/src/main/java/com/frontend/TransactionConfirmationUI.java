@@ -17,10 +17,12 @@ public class TransactionConfirmationUI extends JFrame {
     private JButton exitButton, confirmButton;
     private String accountNumber;
     private double amountToWithdraw;
+    private String authToken;
 
-    public TransactionConfirmationUI(String accountNumber, double amountToWithdraw) {
+    public TransactionConfirmationUI(String accountNumber, double amountToWithdraw, String authToken) {
         this.accountNumber = accountNumber;
         this.amountToWithdraw = amountToWithdraw;
+        this.authToken = authToken;
 
         setTitle("ATM - Transaction Confirmation");
         setSize(850, 800);
@@ -83,7 +85,7 @@ public class TransactionConfirmationUI extends JFrame {
 
         exitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                new TransactionsUI(accountNumber).setVisible(true);
+                new TransactionsUI(accountNumber,authToken).setVisible(true);
                 dispose();
             }
         });

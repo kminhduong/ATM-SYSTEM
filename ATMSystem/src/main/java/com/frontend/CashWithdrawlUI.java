@@ -10,9 +10,11 @@ public class CashWithdrawlUI extends JFrame {
     private JLabel l1;
     private JButton b1, b2, b3, b4, b5, b6, b7;
     private String accountNumber;
+    private String authToken;
 
-    public CashWithdrawlUI(String accountNumber) {
+    public CashWithdrawlUI(String accountNumber,String authToken) {
         this.accountNumber = accountNumber;
+        this.authToken = authToken;
         setTitle("ATM - Cash Withdrawal");
         initializeComponents();
         addComponentsToFrame();
@@ -69,14 +71,14 @@ public class CashWithdrawlUI extends JFrame {
 
         b6.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new EnterAmountUI(accountNumber).setVisible(true);  // Pass account number to EnterAmountUI
+                new EnterAmountUI(accountNumber,authToken).setVisible(true);  // Pass account number to EnterAmountUI
                 dispose();
             }
         });
 
         b7.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new TransactionsUI(accountNumber).setVisible(true);  // Return to main transaction screen
+                    new TransactionsUI(accountNumber,authToken).setVisible(true);  // Return to main transaction screen
                 dispose();
             }
         });
@@ -85,7 +87,7 @@ public class CashWithdrawlUI extends JFrame {
     private ActionListener createWithdrawListener(double amount) {
         return new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                new TransactionConfirmationUI(accountNumber, amount).setVisible(true);
+                new TransactionConfirmationUI(accountNumber, amount,authToken).setVisible(true);
                 dispose();
             }
         };

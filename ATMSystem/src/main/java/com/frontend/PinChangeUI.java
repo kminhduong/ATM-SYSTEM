@@ -10,9 +10,11 @@ public class PinChangeUI extends JFrame {
     private JTextField tf1, tf2, tf3;
     private JButton b1, b2;
     private String accountNumber;
+    private String authToken;
 
-    public PinChangeUI(String accountNumber) {
+    public PinChangeUI(String accountNumber, String authToken) {
         this.accountNumber = accountNumber;
+        this.authToken = authToken;
         setTitle("ATM - PIN Change");
         initializeComponents();
         addComponentsToFrame();
@@ -82,7 +84,7 @@ public class PinChangeUI extends JFrame {
     }
 
     private void navigateToTransactions() {
-        new TransactionsUI(accountNumber).setVisible(true);
+        new TransactionsUI(accountNumber,authToken).setVisible(true);
         dispose();
     }
 

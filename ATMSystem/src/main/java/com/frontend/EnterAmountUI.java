@@ -10,9 +10,11 @@ public class EnterAmountUI extends JFrame {
     private JTextField tf1;
     private JButton b1, b2;
     private String accountNumber;
+    private String authToken;
 
-    public EnterAmountUI(String accountNumber) {
+    public EnterAmountUI(String accountNumber,String authToken) {
         this.accountNumber = accountNumber;
+        this.authToken = accountNumber;
         setTitle("ATM - Enter Amount");
         initializeComponents();
         addComponentsToFrame();
@@ -75,7 +77,7 @@ public class EnterAmountUI extends JFrame {
     }
 
     private void navigateToCashWithdrawal() {
-        new CashWithdrawlUI(accountNumber).setVisible(true);
+        new CashWithdrawlUI(accountNumber,authToken).setVisible(true);
         dispose();
     }
 
@@ -84,7 +86,7 @@ public class EnterAmountUI extends JFrame {
         try {
             double amount = Double.parseDouble(inputAmount);
             if (amount > 0) {
-                new TransactionConfirmationUI(accountNumber, amount).setVisible(true);
+                new TransactionConfirmationUI(accountNumber, amount,authToken).setVisible(true);
                 dispose();
             } else {
                 JOptionPane.showMessageDialog(null, "Please enter a valid amount greater than zero!");
