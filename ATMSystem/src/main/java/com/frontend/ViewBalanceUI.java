@@ -19,54 +19,54 @@ public class ViewBalanceUI extends JFrame {
         this.accountNumber = accountNumber;
 
         setTitle("ATM - View Balance");
-        setSize(600, 400);
-        setLocation(300, 150);
+//        setSize(600, 400);
+//        setLocation(300, 150);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
 
         l1 = new JLabel("VIEW BALANCE ACCOUNT");
         l1.setFont(new Font("Osward", Font.BOLD, 32));
-        l1.setBounds(150, 50, 600, 30);
+        l1.setBounds(200, 100, 600, 30);
         add(l1);
 
         l2 = new JLabel("Account Number:");
         l2.setFont(new Font("Arial", Font.PLAIN, 20));
-        l2.setBounds(50, 200, 200, 30);
+        l2.setBounds(200, 200, 200, 30);
         add(l2);
 
         accountNumberLabel = new JLabel(accountNumber);
         accountNumberLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        accountNumberLabel.setBounds(250, 200, 200, 30);
+        accountNumberLabel.setBounds(400, 200, 200, 30);
         add(accountNumberLabel);
 
         l3 = new JLabel("Full Name:");
         l3.setFont(new Font("Arial", Font.PLAIN, 20));
-        l3.setBounds(50, 250, 150, 30);
+        l3.setBounds(200, 250, 150, 30);
         add(l3);
 
         fullNameLabel = new JLabel("Loading...");
         fullNameLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        fullNameLabel.setBounds(250, 250, 200, 30);
+        fullNameLabel.setBounds(400, 250, 200, 30);
         add(fullNameLabel);
 
         l4 = new JLabel("Current Balance:");
         l4.setFont(new Font("Arial", Font.PLAIN, 20));
-        l4.setBounds(50, 300, 150, 30);
+        l4.setBounds(200, 300, 150, 30);
         add(l4);
 
         balanceLabel = new JLabel("Loading...");
         balanceLabel.setFont(new Font("Arial", Font.PLAIN, 20));
-        balanceLabel.setBounds(250, 300, 200, 30);
+        balanceLabel.setBounds(400, 300, 200, 30);
         add(balanceLabel);
 
         exitButton = new JButton("Exit");
         exitButton.setFont(new Font("Arial", Font.BOLD, 20));
-        exitButton.setBounds(200, 350, 200, 50);
+        exitButton.setBounds(500, 450, 200, 50);
         add(exitButton);
 
         getContentPane().setBackground(Color.WHITE);
-        setSize(600, 500); // Điều chỉnh kích thước
-        setLocation(250, 200);
+        setSize(850, 800); // Điều chỉnh kích thước
+        setLocation(250, 0);
         setVisible(true);
 
         exitButton.addActionListener(new ActionListener() {
