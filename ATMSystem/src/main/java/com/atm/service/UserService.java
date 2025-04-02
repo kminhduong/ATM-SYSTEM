@@ -110,4 +110,8 @@ public class UserService {
     public List<User> getAllCustomers() {
         return userRepository.findAll();
     }
+
+    public User getUserById(String userId) {
+        return userRepository.findByUserId(userId).orElseThrow(() -> new EntityNotFoundException("User not found with id " + userId));
+    }
 }

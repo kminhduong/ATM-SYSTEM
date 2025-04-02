@@ -62,7 +62,6 @@ public class Main {
 
             AccountDTO adminDTO = new AccountDTO(
                     "0000000000",
-                    "admin",
                     "Default Admin",
                     user.getUserId(),
                     AccountType.SAVINGS,

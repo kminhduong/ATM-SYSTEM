@@ -27,9 +27,6 @@ public class Account {
     @JsonIgnore
     private AccountStatus status;
 
-    @Column(name = "username", length = 50, nullable = false, unique = true)
-    private String username;
-
     @Column(name = "full_name", length = 100, nullable = false)
     private String fullName;
 
@@ -57,11 +54,10 @@ public class Account {
     public Account() {}
 
     // ✅ Constructor đầy đủ
-    public Account(String accountNumber, String username,
+    public Account(String accountNumber,
                    String fullName, User user, AccountType accountType,
                    AccountStatus status, double balance, String pin, String role) {
         this.accountNumber = accountNumber;
-        this.username = username;
         this.fullName = fullName;
         this.user = user; // ✅ Sửa lại từ userId thành user
         this.accountType = accountType;
@@ -97,14 +93,6 @@ public class Account {
 
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getFullName() {

@@ -69,13 +69,17 @@ public class AccountController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<String> updateAccount(@RequestBody AccountDTO accountDTO, @RequestHeader("Authorization") String authHeader) {
-        String accountNumber = jwtUtil.validateToken(authHeader.substring(7));
-        if (accountNumber == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid tokens!");
-        }
+    public ResponseEntity<String> updateAccount(@RequestBody AccountDTO accountDTO) {
+//        String accountNumber = jwtUtil.validateToken(authHeader.substring(7));
+//        if (accountNumber == null) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid tokens!");
+//        }
+
+        String accountNumber = accountDTO.getAccountNumber();
         accountService.updateAccount(accountDTO, accountNumber);
         return ResponseEntity.ok("Account update successful!");
+
+
     }
 
     @GetMapping("/customers")

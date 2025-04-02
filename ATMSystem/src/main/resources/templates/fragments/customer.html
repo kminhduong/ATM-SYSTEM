@@ -38,15 +38,15 @@
                         <td th:text="${customer.phone}"></td>
                         <td th:text="${customer.email}"></td>
                         <td>
-                            <button class="btn btn-info" th:attr="onclick='viewTransactionHistory(' + ${customer.userId} + ')'" >
+                            <button class="btn btn-light" th:attr="onclick='viewTransactionHistory(' + ${customer.userId} + ')'" >
                                 🕐 Lịch sử GD
                             </button>
 
-                            <button class="btn btn-success" th:attr="onclick='viewDepositMoney(' + ${customer.userId} + ')'" >
+                            <button class="btn btn-light" th:attr="onclick='viewDepositMoney(' + ${customer.userId} + ')'" >
                                 💳 Nạp tiền
                             </button>
 
-                            <button class="btn btn-success" th:attr="onclick='viewInfoModal(' + ${customer.userId} + ')'" >
+                            <button class="btn btn-light" th:attr="onclick='viewInfoModal(' + ${customer.userId} + ')'" >
                                 📝 Cập nhật TT
                             </button>
                         </td>
@@ -120,10 +120,100 @@
     </div>
 </div>
 
+<div class="modal fade" id="infoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cập nhật thông tin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="infoForm">
+                    <div class="mb-3">
+                        <label class="form-label">Khách hàng: <span id="customerId"></span></label>
+
+                    </div>
+                    <div class="mb-3">
+                        <label for="fullname" class="form-label">Họ tên</label>
+                        <input type="text" class="form-control" id="fullname" placeholder="Nhập họ tên">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">SĐT</label>
+                        <input type="text" class="form-control" id="phone" placeholder="Số điện thoại" >
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" placeholder="Email">
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="UpdateInfo()">Cập nhật </button>
+            </div>
+
+        </div>
+    </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
     const depositModal = new bootstrap.Modal(document.getElementById("depositModal"));
+    const infoModal = new bootstrap.Modal(document.getElementById("infoModal"));
+    function  viewInfoModal(customerId){
+        fetch('/api/users/' + customerId)
+            .then(response => response.json())
+            .then(data => {
+
+                console.log(data)
+                if (data.userId == null){
+                    alert("Có lỗi xảy ra")
+                    return;
+                }
+                document.getElementById("customerId").innerHTML = data.userId
+                document.getElementById("fullname").value = data.name
+                document.getElementById("phone").value = data.phone
+                document.getElementById("email").value = data.email
+
+                infoModal.show()
+            });
+
+
+    }
+
+    function UpdateInfo(){
+        const fullname = document.getElementById('fullname').value;
+        const phone = document.getElementById('phone').value;
+        const email = document.getElementById("email").value;
+        const userId = document.getElementById("customerId").innerHTML
+
+        if (!userId) {
+            alert('Dữ liệu không hợp lệ');
+            return;
+        }
+
+        const payload = { userId,
+            "name": fullname ,phone, email };
+
+        console.log(payload)
+        fetch('/api/users/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(response => response.json())
+            .then(data => {
+                infoModal.hide()
+                location.reload()
+            })
+            .catch(error => {
+                console.error('Có lỗi xảy ra:', error);
+                alert('Có lỗi xảy ra!');
+            });
+    }
+
     function viewTransactionHistory(customerId) {
         fetch('/api/transactions/get-user-transaction/' + customerId)
             .then(response => response.json())
@@ -191,11 +281,6 @@
 
         return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
     }
-
-    // Ví dụ sử dụng
-    const formattedTime = formatDateTime("2025-04-01T16:27:37.000+00:00");
-    console.log(formattedTime); // Output: 16:27:37 01/04/2025
-
 
 
     function viewDepositMoney(customerId) {

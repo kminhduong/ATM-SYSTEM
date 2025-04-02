@@ -9,7 +9,6 @@ import com.atm.repository.UserRepository;
 public class AccountDTO {
 
     private String accountNumber;
-    private String username;
     private String fullName;
     private String userId;
     private AccountType accountType;
@@ -25,11 +24,10 @@ public class AccountDTO {
     }
 
     // Constructor đầy đủ
-    public AccountDTO(String accountNumber, String username, String fullName, String userId,
+    public AccountDTO(String accountNumber,String fullName, String userId,
                       AccountType accountType, AccountStatus status, Double balance,
                       String pin, String role, String phone, String email) {
         this.accountNumber = accountNumber;
-        this.username = username;
         this.fullName = fullName;
         this.userId = userId;
         this.accountType = accountType;
@@ -48,7 +46,6 @@ public class AccountDTO {
 
         Account account = new Account(
                 this.accountNumber != null ? this.accountNumber : "Unknown",
-                this.username != null ? this.username : "DefaultUsername",
                 this.fullName != null ? this.fullName : "Unknown Name",
                 user,
                 this.accountType != null ? this.accountType : AccountType.SAVINGS,
@@ -71,7 +68,6 @@ public class AccountDTO {
     public static AccountDTO fromAccount(Account account) {
         return new AccountDTO(
                 account.getAccountNumber(),
-                account.getUsername(),
                 account.getFullName(),
                 (account.getUser() != null) ? account.getUser().getUserId() : null,
                 account.getAccountType(),
@@ -93,13 +89,6 @@ public class AccountDTO {
         this.accountNumber = accountNumber;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getFullName() {
         return fullName;
