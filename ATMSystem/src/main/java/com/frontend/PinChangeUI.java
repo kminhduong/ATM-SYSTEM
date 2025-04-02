@@ -100,10 +100,10 @@ public class PinChangeUI extends JFrame {
 
         // Kiểm tra đầu vào
         if (currentPin.isEmpty() || newPin.isEmpty() || confirmPin.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Vui lòng điền đầy đủ thông tin");
+            JOptionPane.showMessageDialog(null, "Please fill in all information");
             return;
         } else if (!newPin.equals(confirmPin)) {
-            JOptionPane.showMessageDialog(null, "Mã PIN mới và xác nhận không khớp");
+            JOptionPane.showMessageDialog(null, "New PIN and confirmation do not match");
             return;
         }
 
@@ -131,7 +131,7 @@ public class PinChangeUI extends JFrame {
             // Kiểm tra phản hồi HTTP
             int responseCode = conn.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                JOptionPane.showMessageDialog(null, "Đổi mã PIN thành công!");
+                JOptionPane.showMessageDialog(null, "PIN changed successfully!");
             } else {
                 // Đọc lỗi từ API
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "utf-8"))) {
@@ -140,12 +140,12 @@ public class PinChangeUI extends JFrame {
                     while ((responseLine = br.readLine()) != null) {
                         response.append(responseLine.trim());
                     }
-                    JOptionPane.showMessageDialog(null, "Thất bại khi đổi mã PIN: " + response.toString());
+                    JOptionPane.showMessageDialog(null, "Failed to change PIN: " + response.toString());
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Lỗi: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage());
         }
     }
 
