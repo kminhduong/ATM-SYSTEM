@@ -83,7 +83,7 @@ public class ViewBalanceUI extends JFrame {
 
     public void loadAccountDetails() {
         try {
-            URL url = new URL("http://localhost:8080/api/transactions/balance");
+            URL url = new URL("http://localhost:8080/api/balance/balance");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
             // Cấu hình yêu cầu HTTP GET và truyền token qua header

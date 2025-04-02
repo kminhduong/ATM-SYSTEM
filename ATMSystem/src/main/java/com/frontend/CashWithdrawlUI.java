@@ -6,13 +6,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class CashWithdrawlUI extends JFrame {
-
     private JLabel l1;
     private JButton b1, b2, b3, b4, b5, b6, b7;
     private String accountNumber;
     private String authToken;
 
-    public CashWithdrawlUI(String accountNumber,String authToken) {
+    public CashWithdrawlUI(String accountNumber, String authToken) {
         this.accountNumber = accountNumber;
         this.authToken = authToken;
         setTitle("ATM - Cash Withdrawal");
@@ -69,27 +68,21 @@ public class CashWithdrawlUI extends JFrame {
         b4.addActionListener(createWithdrawListener(3000000));
         b5.addActionListener(createWithdrawListener(5000000));
 
-        b6.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                new EnterAmountUI(accountNumber,authToken).setVisible(true);  // Pass account number to EnterAmountUI
-                dispose();
-            }
+        b6.addActionListener(ae -> {
+            new EnterAmountUI(accountNumber, authToken).setVisible(true);
+            dispose();
         });
 
-        b7.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                    new TransactionsUI(accountNumber,authToken).setVisible(true);  // Return to main transaction screen
-                dispose();
-            }
+        b7.addActionListener(ae -> {
+            new TransactionsUI(accountNumber, authToken).setVisible(true);
+            dispose();
         });
     }
 
     private ActionListener createWithdrawListener(double amount) {
-        return new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                new TransactionConfirmationUI(accountNumber, amount,authToken).setVisible(true);
-                dispose();
-            }
+        return ae -> {
+            new TransactionConfirmationUI(accountNumber, amount, authToken).setVisible(true);
+            dispose();
         };
     }
 
@@ -99,5 +92,4 @@ public class CashWithdrawlUI extends JFrame {
         getContentPane().setBackground(Color.WHITE);
         setVisible(true);
     }
-
 }

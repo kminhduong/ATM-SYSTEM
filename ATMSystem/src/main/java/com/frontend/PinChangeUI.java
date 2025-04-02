@@ -4,6 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class PinChangeUI extends JFrame {
     private JLabel l1, l2, l3, l4;
@@ -80,7 +85,7 @@ public class PinChangeUI extends JFrame {
 
     private void addActionListeners() {
         b1.addActionListener(e -> navigateToTransactions());
-        b2.addActionListener(e -> processPinChange());
+        b2.addActionListener(e -> processPinChange(authToken));
     }
 
     private void navigateToTransactions() {
@@ -88,17 +93,59 @@ public class PinChangeUI extends JFrame {
         dispose();
     }
 
-    private void processPinChange() {
-        String currentPin = tf1.getText();
-        String newPin = tf2.getText();
-        String confirmPin = tf3.getText();
+    private void processPinChange(String authToken) {
+        String currentPin = tf1.getText();  // Mã PIN cũ
+        String newPin = tf2.getText();      // Mã PIN mới
+        String confirmPin = tf3.getText(); // Xác nhận mã PIN mới
 
+        // Kiểm tra đầu vào
         if (currentPin.isEmpty() || newPin.isEmpty() || confirmPin.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Please fill all fields");
+            JOptionPane.showMessageDialog(null, "Vui lòng điền đầy đủ thông tin");
+            return;
         } else if (!newPin.equals(confirmPin)) {
-            JOptionPane.showMessageDialog(null, "New PIN and confirmation do not match");
-        } else {
-            JOptionPane.showMessageDialog(null, "PIN changed successfully!");
+            JOptionPane.showMessageDialog(null, "Mã PIN mới và xác nhận không khớp");
+            return;
+        }
+
+        // Chuẩn bị dữ liệu JSON cho API
+        String jsonInputString = String.format(
+                "{ \"accountNumber\": \"%s\", \"oldPin\": \"%s\", \"newPin\": \"%s\", \"confirmNewPin\": \"%s\" }",
+                "currentLoggedInAccount", currentPin, newPin, confirmPin
+        );
+
+        try {
+            // Cấu hình HttpURLConnection
+            URL url = new URL("http://localhost:8080/api/credential/change-pin"); // Địa chỉ API
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + authToken); // Truyền token qua header
+            conn.setDoOutput(true);
+
+            // Gửi dữ liệu JSON
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            // Kiểm tra phản hồi HTTP
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                JOptionPane.showMessageDialog(null, "Đổi mã PIN thành công!");
+            } else {
+                // Đọc lỗi từ API
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "utf-8"))) {
+                    StringBuilder response = new StringBuilder();
+                    String responseLine;
+                    while ((responseLine = br.readLine()) != null) {
+                        response.append(responseLine.trim());
+                    }
+                    JOptionPane.showMessageDialog(null, "Thất bại khi đổi mã PIN: " + response.toString());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Lỗi: " + e.getMessage());
         }
     }
 

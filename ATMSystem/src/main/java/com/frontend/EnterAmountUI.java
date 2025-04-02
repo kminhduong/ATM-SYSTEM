@@ -12,9 +12,9 @@ public class EnterAmountUI extends JFrame {
     private String accountNumber;
     private String authToken;
 
-    public EnterAmountUI(String accountNumber,String authToken) {
+    public EnterAmountUI(String accountNumber, String authToken) {
         this.accountNumber = accountNumber;
-        this.authToken = accountNumber;
+        this.authToken = authToken;
         setTitle("ATM - Enter Amount");
         initializeComponents();
         addComponentsToFrame();
@@ -33,13 +33,9 @@ public class EnterAmountUI extends JFrame {
         l2.setFont(new Font("Arial", Font.ITALIC, 18));
 
         b1 = new JButton("Exit");
-        b1.setBackground(Color.BLACK);
-        b1.setForeground(Color.BLACK);
         b1.setFont(new Font("Arial", Font.BOLD, 24));
 
         b2 = new JButton("Withdraw");
-        b2.setBackground(Color.BLACK);
-        b2.setForeground(Color.BLACK);
         b2.setFont(new Font("Arial", Font.BOLD, 24));
     }
 
@@ -63,37 +59,25 @@ public class EnterAmountUI extends JFrame {
     }
 
     private void addActionListeners() {
-        b1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                navigateToCashWithdrawal();
-            }
+        b1.addActionListener(ae -> {
+            new CashWithdrawlUI(accountNumber, authToken).setVisible(true);
+            dispose();
         });
 
-        b2.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent ae) {
-                processWithdrawal();
+        b2.addActionListener(ae -> {
+            String inputAmount = tf1.getText().trim();
+            try {
+                double amount = Double.parseDouble(inputAmount);
+                if (amount > 0 && amount % 50000 == 0) {
+                    new TransactionConfirmationUI(accountNumber, amount, authToken).setVisible(true);
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Amount must be a positive number and a multiple of 50.000!");
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Invalid input! Please enter a valid number.");
             }
         });
-    }
-
-    private void navigateToCashWithdrawal() {
-        new CashWithdrawlUI(accountNumber,authToken).setVisible(true);
-        dispose();
-    }
-
-    private void processWithdrawal() {
-        String inputAmount = tf1.getText().trim();
-        try {
-            double amount = Double.parseDouble(inputAmount);
-            if (amount > 0) {
-                new TransactionConfirmationUI(accountNumber, amount,authToken).setVisible(true);
-                dispose();
-            } else {
-                JOptionPane.showMessageDialog(null, "Please enter a valid amount greater than zero!");
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(null, "Invalid input! Please enter a valid number.");
-        }
     }
 
     private void configureFrame() {

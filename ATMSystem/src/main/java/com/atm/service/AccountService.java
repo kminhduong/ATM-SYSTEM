@@ -4,16 +4,11 @@ import com.atm.dto.AccountDTO;
 import com.atm.dto.ApiResponse;
 import com.atm.model.*;
 import com.atm.repository.AccountRepository;
-import com.atm.repository.BalanceRepository;
-import com.atm.repository.CredentialRepository;
 import com.atm.repository.UserRepository;
-import com.atm.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,34 +20,19 @@ public class AccountService {
     private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
 
     private final AccountRepository accountRepository;
-    private final CredentialRepository credentialRepository;
-    private final BalanceRepository balanceRepository;
     private final UserRepository userRepository;
-    private final JdbcTemplate jdbcTemplate;
-    private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
     private final BalanceService balanceService;
     private final CredentialService credentialService;
     private final UserService userService;
 
     @Autowired
     public AccountService(AccountRepository accountRepository,
-                          CredentialRepository credentialRepository,
-                          BalanceRepository balanceRepository,
                           UserRepository userRepository,
-                          JdbcTemplate jdbcTemplate,
-                          JwtUtil jwtUtil,
-                          PasswordEncoder passwordEncoder,
                           BalanceService balanceService,
                           CredentialService credentialService,
                           UserService userService) {
         this.accountRepository = accountRepository;
-        this.credentialRepository = credentialRepository;
-        this.balanceRepository = balanceRepository;
         this.userRepository = userRepository;
-        this.jdbcTemplate = jdbcTemplate;
-        this.jwtUtil = jwtUtil;
-        this.passwordEncoder = passwordEncoder;
         this.balanceService = balanceService;
         this.credentialService = credentialService;
         this.userService = userService;
@@ -149,9 +129,13 @@ public class AccountService {
         }
 
         // Cập nhật thông tin bảo mật (Credential)
-        if (accountDTO.getPin() != null) {
-            credentialService.changePIN(accountDTO);
-        }
+//        if (accountDTO.getPin() != null) {
+//            credentialService.changePIN(
+//                    changePinRequest.getAccountNumber(),
+//                    changePinRequest.getOldPin(),
+//                    changePinRequest.getNewPin()
+//            );
+//        }
 
         // Cập nhật thông tin người dùng
         if (account.getUser() != null) {
@@ -249,18 +233,19 @@ public class AccountService {
 //        return count != null && count > 0;
 //    }
 
+    private <T> ApiResponse<T> handleError(Exception e, String message) {
+        System.err.println(message + ": " + e.getMessage());
+        return new ApiResponse<>(message, null);
+    }
 
     public ApiResponse<List<Account>> getAccountsByUserId(String userId) {
-
         List<Account> accounts;
         try {
             accounts = accountRepository.findByUserId(userId);
         } catch (DataAccessException e) {
-            System.err.println("Lỗi cơ sở dữ liệu: " + e.getMessage());
-            return new ApiResponse<>("Lỗi khi truy xuất lịch sử giao dịch từ cơ sở dữ liệu", null);
+            return handleError(e, "Lỗi khi truy xuất lịch sử giao dịch từ cơ sở dữ liệu");
         } catch (Exception e) {
-            System.err.println("Lỗi không xác định: " + e.getMessage());
-            return new ApiResponse<>("Lỗi không xác định xảy ra", null);
+            return handleError(e, "Lỗi không xác định xảy ra");
         }
 
         // Kiểm tra nếu không có giao dịch nào

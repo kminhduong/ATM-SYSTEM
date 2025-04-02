@@ -1,7 +1,5 @@
 package com.atm.service;
 
-import com.atm.dto.AccountDTO;
-import com.atm.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,13 +13,17 @@ import com.atm.repository.CredentialRepository;
 @Service
 public class CredentialService {
     private final PasswordEncoder passwordEncoder;
+    private final CredentialRepository credentialRepository;
+    private final BalanceService balanceService;
 
     @Autowired
-    public CredentialService(PasswordEncoder passwordEncoder) {
+    public CredentialService(PasswordEncoder passwordEncoder,
+                             CredentialRepository credentialRepository,
+                             BalanceService balanceService) {
         this.passwordEncoder = passwordEncoder;
+        this.credentialRepository = credentialRepository;
+        this.balanceService = balanceService;
     }
-    @Autowired
-    private CredentialRepository credentialRepository; // Đường dẫn đúng tới CredentialRepository
 
     // Phương thức kiểm tra mã PIN (sử dụng mã hóa)
     public boolean validatePIN(String rawPin, String encodedPin) {
@@ -38,13 +40,35 @@ public class CredentialService {
         credentialRepository.save(credential);
     }
 
-    public void changePIN(AccountDTO accountDTO) {
-        Optional<Credential> optionalCredential = credentialRepository.findById(accountDTO.getAccountNumber());
+    public void changePIN(String oldPin, String newPin, String confirmNewPin) {
+        // Lấy account_number từ token đăng nhập
+        String loggedInAccountNumber = balanceService.getLoggedInAccountNumber();
+        if (loggedInAccountNumber == null) {
+            throw new RuntimeException("Không có người dùng nào đang đăng nhập.");
+        }
+
+        System.out.println("🔍 Tài khoản đang đăng nhập: " + loggedInAccountNumber);
+
+        // Yêu cầu kiểm tra tính hợp lệ của PIN mới
+        if (!newPin.equals(confirmNewPin)) {
+            throw new RuntimeException("Mã PIN mới và Mã PIN xác nhận không khớp.");
+        }
+
+        // Tìm Credential của tài khoản
+        Optional<Credential> optionalCredential = credentialRepository.findById(loggedInAccountNumber);
         if (optionalCredential.isPresent()) {
             Credential credential = optionalCredential.get();
-            credential.setPin(passwordEncoder.encode(accountDTO.getPin())); // Mã hóa pin mới
+
+            // Kiểm tra mã PIN cũ
+            if (!passwordEncoder.matches(oldPin, credential.getPin())) {
+                throw new RuntimeException("Mã PIN cũ không chính xác.");
+            }
+
+            // Cập nhật mã PIN mới
+            credential.setPin(passwordEncoder.encode(newPin));
             credential.setUpdateAt(LocalDateTime.now());
-            credentialRepository.save(credential); // Lưu Credential đã cập nhật
+            credentialRepository.save(credential);
+            System.out.println("✅ Mã PIN đã được thay đổi thành công.");
         } else {
             throw new RuntimeException("Không tìm thấy thông tin Credential cho tài khoản này.");
         }

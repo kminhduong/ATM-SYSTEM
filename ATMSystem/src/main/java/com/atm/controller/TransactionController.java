@@ -5,10 +5,7 @@ import com.atm.dto.ApiResponse;
 import com.atm.model.Account;
 import com.atm.model.Transaction;
 import com.atm.model.TransactionType;
-import com.atm.repository.AccountRepository;
-import com.atm.repository.TransactionRepository;
 import com.atm.service.AccountService;
-import com.atm.service.BalanceService;
 import com.atm.service.TransactionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,29 +29,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class TransactionController {
 
     private final AccountService accountService;
-    private final AccountRepository accountRepository;
-    private final TransactionRepository transactionRepository;
     private final TransactionService transactionService;
     private final JwtUtil jwtUtil;
-    private final BalanceService balanceService;
-    private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
 
     @Autowired
     public TransactionController(AccountService accountService,
-                                 AccountRepository accountRepository,
-                                 TransactionRepository transactionRepository,
                                  TransactionService transactionService,
-                                 JwtUtil jwtUtil,BalanceService balanceService) {
+                                 JwtUtil jwtUtil) {
         this.accountService = accountService;
-        this.accountRepository = accountRepository;
-        this.transactionRepository = transactionRepository;
         this.transactionService = transactionService;
-        this.balanceService = balanceService;
         this.jwtUtil = jwtUtil;
-    }
-
-    private String getCurrentAccountNumber(String token) {
-        return jwtUtil.validateToken(token); // Trả về accountNumber từ token
     }
 
     // API Đăng nhập
@@ -194,7 +176,6 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
-
     // API lấy lịch sử giao dịch theo user
     @GetMapping("")
     @RequestMapping(value="/get-user-transaction/{userId}", method = RequestMethod.GET)
@@ -224,14 +205,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Account not found", null));
         }
 
-
         ApiResponse<String> response = transactionService.handleDeposit(account.get(), Double.parseDouble(amount));
         return buildResponse(response);
-    }
-    @GetMapping("/balance")
-    public ResponseEntity<Double> getBalance() {
-        String accountNumber = balanceService.getLoggedInAccountNumber();
-        return accountNumber != null ? ResponseEntity.ok(balanceService.getBalance(accountNumber))
-                : ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
     }
 }

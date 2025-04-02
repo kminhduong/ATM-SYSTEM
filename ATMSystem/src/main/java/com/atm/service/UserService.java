@@ -1,13 +1,8 @@
 package com.atm.service;
 
 import com.atm.dto.AccountDTO;
-import com.atm.model.Account;
 import com.atm.model.User;
-import com.atm.repository.AccountRepository;
-import com.atm.repository.BalanceRepository;
-import com.atm.repository.CredentialRepository;
 import com.atm.repository.UserRepository;
-import com.atm.util.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -15,14 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class UserService {
-    private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final JdbcTemplate jdbcTemplate;
     private final UserRepository userRepository;

@@ -59,7 +59,9 @@ public class Account {
     public Account() {}
 
     // ✅ Constructor đầy đủ
-    public Account(String accountNumber, String username, String fullName, User user, AccountType accountType, AccountStatus status, double balance, String pin, String role) {
+    public Account(String accountNumber, String username,
+                   String fullName, User user, AccountType accountType,
+                   AccountStatus status, double balance, String pin, String role) {
         this.accountNumber = accountNumber;
         this.username = username;
         this.fullName = fullName;

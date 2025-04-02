@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.atm.util.JwtUtil;
 
@@ -27,12 +26,10 @@ import java.util.Optional;
 @Service
 public class TransactionService {
 
-    private final AccountService accountService;
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final JwtUtil jwtUtil;
     private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
-    private final PasswordEncoder passwordEncoder;
     private final CredentialService credentialService;
     private final BalanceService balanceService;
     private final UserRepository userRepository;
@@ -42,19 +39,15 @@ public class TransactionService {
 
 
     @Autowired
-    public TransactionService(AccountService accountService,
-                              AccountRepository accountRepository,
+    public TransactionService(AccountRepository accountRepository,
                               TransactionRepository transactionRepository,
                               JwtUtil jwtUtil,
-                              PasswordEncoder passwordEncoder,
                               CredentialService credentialService,
                               BalanceService balanceService,
                               UserRepository userRepository) {  // Inject passwordEncoder vào constructor
-        this.accountService = accountService;
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.jwtUtil = jwtUtil;
-        this.passwordEncoder = passwordEncoder;  // Gán giá trị cho passwordEncoder
         this.credentialService=credentialService;
         this.balanceService=balanceService;
         this.userRepository = userRepository;
@@ -108,19 +101,12 @@ public class TransactionService {
         Account account = accountOpt.get();
 
         // Thực hiện giao dịch
-        switch (transactionType) {
-            case Withdrawal:
-                return handleWithdraw(account, amount);
-
-            case Deposit:
-                return handleDeposit(account, amount);
-
-            case TRANSFER:
-                return handleTransfer(account, targetAccountNumber, amount);
-
-            default:
-                return new ApiResponse<>("Loại giao dịch không hợp lệ", null);
-        }
+        return switch (transactionType) {
+            case Withdrawal -> handleWithdraw(account, amount);
+            case Deposit -> handleDeposit(account, amount);
+            case TRANSFER -> handleTransfer(account, targetAccountNumber, amount);
+            default -> new ApiResponse<>("Loại giao dịch không hợp lệ", null);
+        };
     }
 
     private ApiResponse<String> handleWithdraw(Account account, double amount) {
@@ -144,7 +130,8 @@ public class TransactionService {
         try {
             transactionRepository.save(transaction);
         } catch (Exception e) {
-            e.printStackTrace();
+            // Thay thế printStackTrace bằng ghi log
+            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
             return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
         }
 
@@ -168,7 +155,8 @@ public class TransactionService {
         try {
             transactionRepository.save(transaction);
         } catch (Exception e) {
-            e.printStackTrace();
+            // Thay printStackTrace bằng logger.error
+            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
             return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
         }
 
@@ -216,7 +204,8 @@ public class TransactionService {
             transactionRepository.save(transactionSource);
             transactionRepository.save(transactionTarget);
         } catch (Exception e) {
-            e.printStackTrace();
+            // Thay thế printStackTrace bằng logger.error
+            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
             return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
         }
 
@@ -277,7 +266,6 @@ public class TransactionService {
         if (userOpt.isEmpty()) {
             return new ApiResponse<>("Không tìm thấy thông tin người dùng cho tài khoản này.", null);
         }
-        String phoneNumber = userOpt.get().getPhone();
 
         // Kiểm tra số dư tài khoản
         if (request.getAmount() > account.getBalance()) {
