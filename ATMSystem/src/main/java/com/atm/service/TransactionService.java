@@ -105,13 +105,13 @@ public class TransactionService {
             case WITHDRAWAL -> handleWithdraw(account, amount);
             case DEPOSIT -> handleDeposit(account, amount);
             case TRANSFER -> handleTransfer(account, targetAccountNumber, amount);
-            default -> new ApiResponse<>("Loại giao dịch không hợp lệ", null);
+            default -> new ApiResponse<>("Invalid transaction type", null);
         };
     }
 
     private ApiResponse<String> handleWithdraw(Account account, double amount) {
         if (amount > account.getBalance()) {
-            return new ApiResponse<>("Số dư không đủ để thực hiện giao dịch", null);
+            return new ApiResponse<>("Insufficient balance to make transaction", null);
         }
 
         // Tạo DTO để cập nhật số dư
@@ -131,11 +131,11 @@ public class TransactionService {
             transactionRepository.save(transaction);
         } catch (Exception e) {
             // Thay thế printStackTrace bằng ghi log
-            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
-            return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
+            logger.error("Unable to save transaction to database. Error details: ", e);
+            return new ApiResponse<>("Unable to save transaction to database", null);
         }
 
-        return new ApiResponse<>("Rút tiền thành công", String.valueOf(account.getBalance()));
+        return new ApiResponse<>("Withdraw successfully", String.valueOf(account.getBalance()));
     }
 
     public ApiResponse<String> handleDeposit(Account account, double amount) {
@@ -156,21 +156,21 @@ public class TransactionService {
             transactionRepository.save(transaction);
         } catch (Exception e) {
             // Thay printStackTrace bằng logger.error
-            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
-            return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
+            logger.error("Unable to save transaction to database. Error details: ", e);
+            return new ApiResponse<>("Unable to save transaction to database", null);
         }
 
-        return new ApiResponse<>("Nạp tiền thành công", String.valueOf(account.getBalance()));
+        return new ApiResponse<>("Deposit successfully", String.valueOf(account.getBalance()));
     }
 
     private ApiResponse<String> handleTransfer(Account sourceAccount, String targetAccountNumber, double amount) {
         if (amount > sourceAccount.getBalance()) {
-            return new ApiResponse<>("Số dư không đủ để thực hiện giao dịch chuyển tiền", null);
+            return new ApiResponse<>("Insufficient balance to make money transfer", null);
         }
 
         Optional<Account> targetAccountOpt = accountRepository.findByAccountNumber(targetAccountNumber);
         if (targetAccountOpt.isEmpty()) {
-            return new ApiResponse<>("Tài khoản nhận không hợp lệ", null);
+            return new ApiResponse<>("Invalid receiving account", null);
         }
 
         Account targetAccount = targetAccountOpt.get();
@@ -205,71 +205,71 @@ public class TransactionService {
             transactionRepository.save(transactionTarget);
         } catch (Exception e) {
             // Thay thế printStackTrace bằng logger.error
-            logger.error("Không thể lưu giao dịch vào cơ sở dữ liệu. Chi tiết lỗi: ", e);
-            return new ApiResponse<>("Không thể lưu giao dịch vào cơ sở dữ liệu", null);
+            logger.error("Unable to save transaction to database. Error details: ", e);
+            return new ApiResponse<>("Unable to save transaction to database", null);
         }
 
-        return new ApiResponse<>("Chuyển tiền thành công", String.valueOf(sourceAccount.getBalance()));
+        return new ApiResponse<>("Transfer successful", String.valueOf(sourceAccount.getBalance()));
     }
 
     public ApiResponse<String> sendOtpForWithdrawal(String accountNumber){
         // 1. Kiểm tra accountNumber đầu vào
         if (accountNumber == null || accountNumber.isEmpty()) {
-            return new ApiResponse<>("Số tài khoản là bắt buộc.", null);
+            return new ApiResponse<>("Account number is required.", null);
         }
 
         // 2. Tìm tài khoản từ cơ sở dữ liệu
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
         if (accountOpt.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy tài khoản với số tài khoản đã cung cấp.", null);
+            return new ApiResponse<>("No account found with the provided account number", null);
         }
         Account account = accountOpt.get();
 
         // 3. Tìm số điện thoại từ bảng User
         Optional<User> userOpt = userRepository.findByUserId(account.getUser().getUserId()); // Liên kết account với userId
         if (userOpt.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy thông tin người dùng cho tài khoản này.", null);
+            return new ApiResponse<>("No user information found for this account.", null);
         }
         String phoneNumber = userOpt.get().getPhone();
 
         // 4. Gửi OTP
         String generatedOtp = generateAndSendOtp(phoneNumber);
-        return new ApiResponse<>("OTP đã được gửi đến số điện thoại của bạn.", generatedOtp);
+        return new ApiResponse<>("OTP has been sent to your phone number.", generatedOtp);
     }
 
     public ApiResponse<String> processWithdrawWithOtp(WithdrawOtpRequest request) {
         // Kiểm tra đầu vào
         if (request.getAccountNumber() == null || request.getAccountNumber().isEmpty()) {
-            return new ApiResponse<>("Số tài khoản là bắt buộc.", null);
+            return new ApiResponse<>("Account number is required.", null);
         }
         if (request.getOtp() == null || request.getOtp().isEmpty()) {
-            return new ApiResponse<>("OTP là bắt buộc.", null);
+            return new ApiResponse<>("OTP is required.", null);
         }
         if (request.getAmount() == null || request.getAmount() <= 0) {
-            return new ApiResponse<>("Số tiền muốn rút phải lớn hơn 0.", null);
+            return new ApiResponse<>("The amount to be withdrawn must be greater than 0.", null);
         }
 
         // Xác thực OTP
         if (!"123456".equals(request.getOtp())) {
-            return new ApiResponse<>("OTP không hợp lệ. Vui lòng thử lại.", null);
+            return new ApiResponse<>("Invalid OTP. Please try again.", null);
         }
 
         // Lấy tài khoản từ cơ sở dữ liệu
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(request.getAccountNumber());
         if (accountOpt.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy tài khoản với số tài khoản đã cung cấp.", null);
+            return new ApiResponse<>("No account found with the provided account number.", null);
         }
         Account account = accountOpt.get();
 
         // Lấy thông tin User để kiểm tra số điện thoại
         Optional<User> userOpt = userRepository.findByUserId(account.getUser().getUserId());
         if (userOpt.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy thông tin người dùng cho tài khoản này.", null);
+            return new ApiResponse<>("No user information found for this account.", null);
         }
 
         // Kiểm tra số dư tài khoản
         if (request.getAmount() > account.getBalance()) {
-            return new ApiResponse<>("Số dư không đủ để thực hiện giao dịch.", null);
+            return new ApiResponse<>("Insufficient balance to complete transaction.", null);
         }
 
         // Thực hiện rút tiền
@@ -289,13 +289,13 @@ public class TransactionService {
         transactionRepository.save(transaction);
 
         // Trả kết quả
-        return new ApiResponse<>("Giao dịch rút tiền thành công.", "Số dư còn lại: " + account.getBalance());
+        return new ApiResponse<>("Withdrawal successful.", "Remaining balance: " + account.getBalance());
     }
 
     private String generateAndSendOtp(String phoneNumber) {
         // Tạo OTP ngẫu nhiên
         String otp = "123456"; // Hoặc sử dụng phương pháp tạo mã OTP thực tế
-        logger.info("Đang gửi OTP {} tới số điện thoại {}", otp, phoneNumber);
+        logger.info("Sending OTP {} to phone number {}", otp, phoneNumber);
         // Logic gửi OTP tới số điện thoại (API SMS hoặc tích hợp khác)
         return otp;
     }
@@ -303,7 +303,7 @@ public class TransactionService {
     public ApiResponse<List<Transaction>> getTransactionHistory(String accountNumber) {
         // Kiểm tra đầu vào
         if (accountNumber == null || accountNumber.isEmpty()) {
-            return new ApiResponse<>("Số tài khoản không được để trống", null);
+            return new ApiResponse<>("Account number cannot be blank", null);
         }
 
         // Lấy lịch sử giao dịch từ cơ sở dữ liệu

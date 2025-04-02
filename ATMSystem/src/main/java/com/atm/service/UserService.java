@@ -39,25 +39,25 @@ public class UserService {
         String userId = accountDTO.getUserId();
         if (userId == null || userId.isEmpty()) {
             logger.error("User ID is required.");
-            throw new IllegalArgumentException("User ID là bắt buộc.");
+            throw new IllegalArgumentException("User ID is required.");
         }
 
         String fullName = accountDTO.getFullName();
         if (fullName == null || fullName.isEmpty()) {
             logger.error("Full name is required for user registration.");
-            throw new IllegalArgumentException("Họ tên là bắt buộc.");
+            throw new IllegalArgumentException("Full name is required.");
         }
 
         String phone = accountDTO.getPhone(); // Lấy thông tin số điện thoại
         if (phone == null || phone.isEmpty()) {
             logger.error("Phone is required for user registration.");
-            throw new IllegalArgumentException("Số điện thoại là bắt buộc.");
+            throw new IllegalArgumentException("Phone number is required.");
         }
 
         String email = accountDTO.getEmail(); // Lấy thông tin email
         if (email == null || email.isEmpty()) {
             logger.error("Email is required for user registration.");
-            throw new IllegalArgumentException("Email là bắt buộc.");
+            throw new IllegalArgumentException("Email is required.");
         }
 
         // Kiểm tra trong cơ sở dữ liệu dựa trên userId
@@ -72,10 +72,10 @@ public class UserService {
         if (existingName != null) {
             // Kiểm tra nếu tên không khớp
             if (!existingName.equals(fullName)) {
-                logger.error("User ID: {} đã tồn tại nhưng tên không khớp. Tên hiện tại trong DB: {}, Tên được yêu cầu: {}", userId, existingName, fullName);
-                throw new IllegalArgumentException("User ID đã tồn tại nhưng tên không khớp.");
+                logger.error("User ID: {} already exists but name does not match. Current name in DB: {}, Requested name: {}", userId, existingName, fullName);
+                throw new IllegalArgumentException("User ID already exists but name does not match.");
             }
-            logger.info("User ID: {} đã tồn tại với tên khớp: {}", userId, existingName);
+            logger.info("User ID: {} already exists with matching name: {}", userId, existingName);
             return false; // Người dùng đã tồn tại với thông tin đúng
         }
 
@@ -103,7 +103,7 @@ public class UserService {
         try {
             userRepository.save(user);
         } catch (Exception e) {
-            throw new RuntimeException("Có lỗi khi lưu thông tin người dùng: " + e.getMessage());
+            throw new RuntimeException("Error saving user information: " + e.getMessage());
         }
     }
 

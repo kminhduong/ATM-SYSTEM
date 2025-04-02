@@ -32,7 +32,7 @@ public class JwtUtil {
 //                .compact();
 //    }
     public String generateToken(String accountNumber, String role, long expirationTime) {
-        System.out.println("🔍 Role từ DB trước khi tạo JWT: " + role);
+        System.out.println("🔍 Role from DB before creating JWT: " + role);
 
         String token = Jwts.builder()
                 .setSubject(accountNumber)
