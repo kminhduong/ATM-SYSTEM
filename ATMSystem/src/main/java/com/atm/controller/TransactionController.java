@@ -86,7 +86,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.Withdrawal, null);
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.WITHDRAWAL, null);
         return buildResponse(response);
     }
 
@@ -102,7 +102,7 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiResponse<>("Token has been logged out", null));
         }
 
-        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.Deposit, null);
+        ApiResponse<String> response = transactionService.recordTransaction(token, request.getAmount(), TransactionType.DEPOSIT, null);
         return buildResponse(response);
     }
 
@@ -138,7 +138,7 @@ public class TransactionController {
         ApiResponse<String> response = transactionService.sendOtpForWithdrawal(accountNumber);
 
         // Xử lý kết quả
-        if ("OTP đã được gửi đến số điện thoại của bạn.".equals(response.getMessage())) {
+        if ("OTP has been sent to your phone number.".equals(response.getMessage())) {
             return ResponseEntity.ok(response); // Thành công
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response); // Lỗi
@@ -151,7 +151,7 @@ public class TransactionController {
         ApiResponse<String> response = transactionService.processWithdrawWithOtp(request);
 
         // Trả kết quả về cho client
-        if ("Giao dịch rút tiền thành công.".equals(response.getMessage())) {
+        if ("Successful withdrawal transaction.".equals(response.getMessage())) {
             return ResponseEntity.ok(response); // Thành công
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response); // Lỗi
@@ -169,7 +169,7 @@ public class TransactionController {
         String accountNumber = jwtUtil.validateToken(token);
 
         if (accountNumber == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Invalid or expired tokens", null));
         }
 
         ApiResponse<List<Transaction>> response = transactionService.getTransactionHistory(accountNumber);
@@ -182,7 +182,7 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<List<Transaction>>> getUserTransactionHistory(@PathVariable("userId") String userId) {
 
         if (userId == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Input không hợp lệ", null));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Invalid input", null));
         }
         ApiResponse<List<Transaction>> response = transactionService.getTransactionHistoryByUser(userId);
         return ResponseEntity.ok(response);
@@ -197,7 +197,7 @@ public class TransactionController {
         String amount = body.get("amount").toString();
 
         if (accId == null || amount == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Input không hợp lệ", null));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ApiResponse<>("Invalid input", null));
         }
 
         Optional<Account> account = Optional.ofNullable(accountService.getAccountById(accId));

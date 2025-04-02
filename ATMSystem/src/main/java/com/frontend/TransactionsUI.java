@@ -72,12 +72,12 @@ public class TransactionsUI extends JFrame {
             }
         });
 
-//        b3.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent ae) {
-//                new TransferUI(accountNumber).setVisible(true);  // Assuming TransferUI is implemented
-//                dispose();
-//            }
-//        });
+        b3.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                new TransferUI(accountNumber,authToken).setVisible(true);  // Assuming TransferUI is implemented
+                dispose();
+            }
+        });
 
         b4.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {

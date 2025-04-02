@@ -12,7 +12,7 @@ public enum AccountType {
             return AccountType.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException | NullPointerException e) {
             // Xử lý nếu không có hằng số phù hợp
-            throw new IllegalArgumentException("Loại tài khoản không hợp lệ: " + value);
+            throw new IllegalArgumentException("Invalid account type: " + value);
         }
     }
 }

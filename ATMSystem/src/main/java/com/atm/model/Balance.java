@@ -4,14 +4,13 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "balance")
+@Table(name = "Balance")
 public class Balance {
-
     @Id
     @Column(name = "account_number", length = 50)
-    private String accountNumber; // Sử dụng @MapsId để ánh xạ từ Account
+    private String accountNumber;
 
-    @Column(name = "balance", nullable = false)
+    @Column(name = "balance", nullable = false, columnDefinition = "DECIMAL(15,2) DEFAULT 0.00") // Added default value
     private Double balance;
 
     @Column(name = "last_updated")

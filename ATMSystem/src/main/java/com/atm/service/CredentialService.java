@@ -44,14 +44,14 @@ public class CredentialService {
         // Lấy account_number từ token đăng nhập
         String loggedInAccountNumber = balanceService.getLoggedInAccountNumber();
         if (loggedInAccountNumber == null) {
-            throw new RuntimeException("Không có người dùng nào đang đăng nhập.");
+            throw new RuntimeException("No users are logged in.");
         }
 
-        System.out.println("🔍 Tài khoản đang đăng nhập: " + loggedInAccountNumber);
+        System.out.println("🔍 Account currently logged in: " + loggedInAccountNumber);
 
         // Yêu cầu kiểm tra tính hợp lệ của PIN mới
         if (!newPin.equals(confirmNewPin)) {
-            throw new RuntimeException("Mã PIN mới và Mã PIN xác nhận không khớp.");
+            throw new RuntimeException("New PIN and Confirmation PIN do not match.");
         }
 
         // Tìm Credential của tài khoản
@@ -61,16 +61,16 @@ public class CredentialService {
 
             // Kiểm tra mã PIN cũ
             if (!passwordEncoder.matches(oldPin, credential.getPin())) {
-                throw new RuntimeException("Mã PIN cũ không chính xác.");
+                throw new RuntimeException("Old PIN is incorrect.");
             }
 
             // Cập nhật mã PIN mới
             credential.setPin(passwordEncoder.encode(newPin));
             credential.setUpdateAt(LocalDateTime.now());
             credentialRepository.save(credential);
-            System.out.println("✅ Mã PIN đã được thay đổi thành công.");
+            System.out.println("✅ PIN code has been changed successfully.");
         } else {
-            throw new RuntimeException("Không tìm thấy thông tin Credential cho tài khoản này.");
+            throw new RuntimeException("Credential information not found for this account.");
         }
     }
 

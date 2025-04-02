@@ -99,6 +99,14 @@ public class LoginUI extends JFrame {
                 clearFields();
             }
         });
+        b3.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+
+                new WithdrawWithOTPUI().setVisible(true);
+                dispose();
+
+            }
+        });
     }
 
     private void handleLogin() {

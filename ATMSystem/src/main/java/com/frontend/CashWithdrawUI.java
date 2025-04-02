@@ -5,7 +5,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class CashWithdrawUI extends JFrame {
+public class
+CashWithdrawUI extends JFrame {
 
     private JLabel l1;
     private JButton b1, b2, b3, b4, b5, b6, b7;

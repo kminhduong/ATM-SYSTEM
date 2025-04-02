@@ -64,35 +64,35 @@ public class AccountService {
      */
     @Transactional
     public Account createAccount(Account account) {
-        logger.info("🔍 Đang vào phương thức createAccount...");
+        logger.info("🔍 Entering the createAccount...");
         logger.info("Received request to register account: {}", account.getAccountNumber());
 
         // 1. Kiểm tra xem tài khoản đã tồn tại hay chưa.
         if (accountRepository.existsById(account.getAccountNumber())) {
             logger.error("Account already exists: {}", account.getAccountNumber());
-            throw new IllegalArgumentException("Tài khoản đã tồn tại!");
+            throw new IllegalArgumentException("The account already exists!");
         }
 
         // 2. Kiểm tra thông tin người dùng (User) của tài khoản.
         User user = account.getUser();
         if (user == null) {
-            logger.info("User của tài khoản là null, kiểm tra lại từ DB...");
+            logger.info("The user of the account is null, check again from the DB...");
             user = userRepository.findByUserId(account.getUser().getUserId()).orElse(null);
 
             // Nếu User tồn tại nhưng tên không khớp, ném ngoại lệ.
             if (user != null && !user.getName().equals(account.getFullName())) {
-                logger.error("User với ID {} đã tồn tại nhưng có tên khác: {}", account.getUser().getUserId(), user.getName());
-                throw new IllegalArgumentException("Tên người dùng không khớp với userId!");
+                logger.error("User with ID {} already exists but has a different name: {}", account.getUser().getUserId(), user.getName());
+                throw new IllegalArgumentException("Name doesn't match userId!");
             }
 
             // Nếu không tìm thấy User, tạo User mới.
             if (user == null) {
-                logger.info("Không tìm thấy User, tạo User mới...");
+                logger.info("User not found, creating a new User...");
                 user = new User();
                 user.setUserId(account.getUser().getUserId());
                 user.setName(account.getFullName());
                 userRepository.save(user);
-                logger.info("User mới được tạo với ID: {}", user.getUserId());
+                logger.info("New User created with ID: {}", user.getUserId());
             }
         }
         account.setUser(user);
@@ -111,7 +111,7 @@ public class AccountService {
         Optional<Account> optionalAccount = accountRepository.findById(accountDTO.getAccountNumber());
 
         if (optionalAccount.isEmpty()) {
-            throw new RuntimeException("Tài khoản không tồn tại.");
+            throw new RuntimeException("The account does not exist.");
         }
 
         Account account = optionalAccount.get();
@@ -125,7 +125,7 @@ public class AccountService {
         // Nếu cập nhật số dư
         if (accountDTO.getBalance() != null) {
             checkUpdatePermission(accountNumber, accountDTO, true);
-            balanceService.updateBalance(accountDTO, account, TransactionType.Deposit);
+            balanceService.updateBalance(accountDTO, account, TransactionType.DEPOSIT);
         }
 
         // Cập nhật thông tin bảo mật (Credential)
@@ -141,7 +141,7 @@ public class AccountService {
         if (account.getUser() != null) {
             userService.updateUserDetails(account.getUser(), accountDTO);
         } else {
-            throw new RuntimeException("Không tìm thấy người dùng liên kết với tài khoản này.");
+            throw new RuntimeException("The user associated with this account was not found.");
         }
 
         // Lưu Account sau khi cập nhật
@@ -155,11 +155,11 @@ public class AccountService {
         }
 
         if (!accountNumber.equals(accountDTO.getAccountNumber())) {
-            throw new RuntimeException("Bạn không có quyền cập nhật tài khoản này!");
+            throw new RuntimeException("You do not have the right to update this account!");
         }
 
         if (isBalanceUpdate) {
-            throw new RuntimeException("Bạn không có quyền thay đổi số dư tài khoản này!");
+            throw new RuntimeException("You do not have the right to change this account balance!");
         }
     }
 
@@ -185,11 +185,11 @@ public class AccountService {
 //
 //        if (accountOpt.isPresent()) {
 //            Account account = accountOpt.get();
-//            logger.info("🔍 Tài khoản tìm thấy: {}, Role: {}", account.getAccountNumber(), account.getRole());
+//            logger.info("🔍 Accounts found: {}, Role: {}", account.getAccountNumber(), account.getRole());
 //            return account;
 //        }
 //
-//        logger.warn("⚠ Không tìm thấy tài khoản: {}", accountNumber);
+//        logger.warn("⚠ No account found: {}", accountNumber);
 //        return null;
 //    }
 
@@ -199,14 +199,14 @@ public class AccountService {
 //
 //        // Kiểm tra tính hợp lệ của trạng thái
 //        if (!validStatuses.contains(new_status)) {
-//            throw new IllegalArgumentException("Trạng thái không hợp lệ: " + new_status);
+//            throw new IllegalArgumentException("Invalid Status: " + new_status);
 //        }
 //
 //        // Cập nhật trạng thái
 //        account.setStatus(new_status);
 //        accountRepository.save(account); // Lưu vào cơ sở dữ liệu
 //
-//        System.out.println("Trạng thái tài khoản đã được cập nhật thành: " + new_status);
+//        System.out.println("The account status has been updated to: " + new_status);
 //    }
 
 //    public String checkAccountStatus() {
@@ -243,14 +243,14 @@ public class AccountService {
         try {
             accounts = accountRepository.findByUserId(userId);
         } catch (DataAccessException e) {
-            return handleError(e, "Lỗi khi truy xuất lịch sử giao dịch từ cơ sở dữ liệu");
+            return handleError(e, "Error retrieving translation history from database");
         } catch (Exception e) {
-            return handleError(e, "Lỗi không xác định xảy ra");
+            return handleError(e, "An unknown error occurred");
         }
 
         // Kiểm tra nếu không có giao dịch nào
         if (accounts == null || accounts.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy tài khoản nào cho user này", null);
+            return new ApiResponse<>("No accounts found for this user", null);
         }
         return new ApiResponse<>("success", accounts);
     }

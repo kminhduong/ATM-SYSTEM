@@ -80,7 +80,8 @@ public class UserService {
         }
 
         // Tạo mới người dùng
-        String sqlInsert = "INSERT INTO `User` (user_id, name, phone, email) VALUES (?, ?, ?, ?)";
+        String sqlInsert = "INSERT INTO `User` (user_id, name, phone, email, create_at)\n" +
+                "VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP);";
         int rows = jdbcTemplate.update(sqlInsert, userId, fullName, phone, email);
         if (rows > 0) {
             logger.info("User created with ID: {}", userId);

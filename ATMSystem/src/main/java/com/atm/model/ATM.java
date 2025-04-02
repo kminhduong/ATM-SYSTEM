@@ -2,10 +2,9 @@ package com.atm.model;
 
 import jakarta.persistence.*;
 import java.util.Date;
-import java.util.UUID;
 
 @Entity
-@Table(name = "atm")
+@Table(name = "ATM")
 public class ATM {
 
     @Id
@@ -35,12 +34,12 @@ public class ATM {
     @Column(name = "last_updated", nullable = false)
     private Date lastUpdated;
 
-    // ✅ No-arg constructor (Hibernate cần)
+    // No-arg constructor (Hibernate cần)
     public ATM() {
         this.lastUpdated = new Date(); // Mặc định thời gian cập nhật
     }
 
-    // ✅ Constructor đầy đủ (không cần totalAmount vì MySQL sẽ tự tính)
+    // Constructor đầy đủ
     public ATM(int cash500, int cash200, int cash100, int cash50, ATMStatus status) {
         this.cash500 = cash500;
         this.cash200 = cash200;
@@ -50,7 +49,13 @@ public class ATM {
         this.lastUpdated = new Date();
     }
 
-    // ✅ Getters (Không cần setter cho `totalAmount` vì nó là cột tính toán)
+    // Method to insert default ATM record
+    public static void insertDefaultATM(EntityManager entityManager) {
+        ATM defaultATM = new ATM(50, 100, 200, 300, ATMStatus.ACTIVE);
+        entityManager.persist(defaultATM);
+    }
+
+    // Getters and Setters
     public String getAtmId() {
         return atmId;
     }

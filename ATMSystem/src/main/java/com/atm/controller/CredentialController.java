@@ -25,7 +25,7 @@ public class CredentialController {
         try {
             // Gọi hàm changePIN trong service
             credentialService.changePIN(request.getOldPin(), request.getNewPin(), request.getConfirmNewPin());
-            return ResponseEntity.ok("Mã PIN đã được thay đổi thành công.");
+            return ResponseEntity.ok("The PIN has been changed successfully.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
         }

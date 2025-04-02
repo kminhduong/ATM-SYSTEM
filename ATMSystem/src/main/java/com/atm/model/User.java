@@ -3,28 +3,30 @@ package com.atm.model;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Pattern;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "user")
+@Table(name = "User") // Ensure the table name matches the database
 public class User {
-
     @Id
     @Column(name = "user_id", length = 12, updatable = false, nullable = false, unique = true)
-    @Pattern(regexp = "\\d{12}", message = "userId phải là 12 số (CCCD)")
-    private String userId; // Ràng buộc userId phải là 12 chữ số (CCCD)
+    @Pattern(regexp = "\\d{12}", message = "userId must be 12 digits (CCCD)")
+    private String userId;
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
 
-    @Column(name = "email", length = 100, unique = true, nullable = false)
+    @Column(name = "email", length = 100, nullable = false) // Changed to nullable = false
     private String email;
 
-    @Column(name = "phone", length = 20, unique = true, nullable = false)
+    @Column(name = "phone", length = 20, nullable = false) // Changed to nullable = false
     private String phone;
 
-    @Column(name = "create_at", nullable = false)
+    @Column(name = "create_at", nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime createAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
@@ -51,7 +53,7 @@ public class User {
     public void setUserId(String userId) {
         // Kiểm tra userId có phải là CCCD với 12 số không
         if (userId != null && !userId.matches("\\d{12}")) {
-            throw new IllegalArgumentException("userId phải là 12 số (CCCD)");
+            throw new IllegalArgumentException("userId must be 12 digits (CCCD)");
         }
         this.userId = userId;
     }

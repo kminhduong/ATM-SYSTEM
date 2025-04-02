@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 public interface ATMRepository extends JpaRepository<ATM, Long> {
     // Tìm ATM hiện tại (giả sử chỉ có một máy ATM trong hệ thống)
     default ATM findATM() {
-        return findById(1L).orElseThrow(() -> new RuntimeException("Không tìm thấy máy ATM."));
+        return findById(1L).orElseThrow(() -> new RuntimeException("No ATM found."));
     }
 
 //    // Lấy trạng thái của ATM

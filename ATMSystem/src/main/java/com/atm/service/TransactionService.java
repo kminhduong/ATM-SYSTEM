@@ -85,25 +85,25 @@ public class TransactionService {
         // Xác minh token và quyền
         String accountNumber = jwtUtil.validateToken(token);
         if (accountNumber == null) {
-            return new ApiResponse<>("Token không hợp lệ hoặc hết hạn", null);
+            return new ApiResponse<>("Token is invalid or expired", null);
         }
 
         String role = jwtUtil.getRoleFromToken(token);
         if (!"USER".equals(role)) {
-            return new ApiResponse<>("Bạn không có quyền thực hiện giao dịch này", null);
+            return new ApiResponse<>("You do not have permission to perform this transaction.", null);
         }
 
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
         if (accountOpt.isEmpty()) {
-            return new ApiResponse<>("Không tìm thấy tài khoản", null);
+            return new ApiResponse<>("Account not found", null);
         }
 
         Account account = accountOpt.get();
 
         // Thực hiện giao dịch
         return switch (transactionType) {
-            case Withdrawal -> handleWithdraw(account, amount);
-            case Deposit -> handleDeposit(account, amount);
+            case WITHDRAWAL -> handleWithdraw(account, amount);
+            case DEPOSIT -> handleDeposit(account, amount);
             case TRANSFER -> handleTransfer(account, targetAccountNumber, amount);
             default -> new ApiResponse<>("Loại giao dịch không hợp lệ", null);
         };
@@ -117,13 +117,13 @@ public class TransactionService {
         // Tạo DTO để cập nhật số dư
         AccountDTO withdrawalDTO = new AccountDTO();
         withdrawalDTO.setBalance(amount);
-        balanceService.updateBalance(withdrawalDTO, account, TransactionType.Withdrawal);
+        balanceService.updateBalance(withdrawalDTO, account, TransactionType.WITHDRAWAL);
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(
                 account.getAccountNumber(),
                 amount,
-                TransactionType.Withdrawal,
+                TransactionType.WITHDRAWAL,
                 new Date()
         );
 
@@ -142,13 +142,13 @@ public class TransactionService {
         // Tạo DTO để cập nhật số dư
         AccountDTO depositDTO = new AccountDTO();
         depositDTO.setBalance(amount);
-        balanceService.updateBalance(depositDTO, account, TransactionType.Deposit);
+        balanceService.updateBalance(depositDTO, account, TransactionType.DEPOSIT);
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(
                 account.getAccountNumber(),
                 amount,
-                TransactionType.Deposit,
+                TransactionType.DEPOSIT,
                 new Date()
         );
 
@@ -178,12 +178,12 @@ public class TransactionService {
         // Tạo DTO để trừ tiền tài khoản nguồn
         AccountDTO transferSourceDTO = new AccountDTO();
         transferSourceDTO.setBalance(amount);
-        balanceService.updateBalance(transferSourceDTO, sourceAccount, TransactionType.Withdrawal);
+        balanceService.updateBalance(transferSourceDTO, sourceAccount, TransactionType.WITHDRAWAL);
 
         // Tạo DTO để cộng tiền tài khoản đích
         AccountDTO transferTargetDTO = new AccountDTO();
         transferTargetDTO.setBalance(amount);
-        balanceService.updateBalance(transferTargetDTO, targetAccount, TransactionType.Deposit);
+        balanceService.updateBalance(transferTargetDTO, targetAccount, TransactionType.DEPOSIT);
 
         // Lưu giao dịch
         Transaction transactionSource = new Transaction(
@@ -196,7 +196,7 @@ public class TransactionService {
         Transaction transactionTarget = new Transaction(
                 targetAccount.getAccountNumber(),
                 amount,
-                TransactionType.Deposit,
+                TransactionType.DEPOSIT,
                 new Date()
         );
 

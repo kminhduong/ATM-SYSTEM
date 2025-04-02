@@ -49,13 +49,13 @@ public class AccountController {
             // Đăng ký tài khoản
             accountService.registerAccount(accountDTO);
 
-            return ResponseEntity.ok("Tài khoản đã được đăng ký thành công!");
+            return ResponseEntity.ok("The account has been successfully registered!");
         } catch (IllegalArgumentException e) {
             logger.error("Error while registering account: " + e.getMessage());
             return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
         } catch (Exception e) {
             logger.error("Unexpected error: " + e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Đã xảy ra lỗi khi đăng ký tài khoản!");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred when registering an account!");
         }
     }
 
@@ -72,10 +72,10 @@ public class AccountController {
     public ResponseEntity<String> updateAccount(@RequestBody AccountDTO accountDTO, @RequestHeader("Authorization") String authHeader) {
         String accountNumber = jwtUtil.validateToken(authHeader.substring(7));
         if (accountNumber == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token không hợp lệ!");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid tokens!");
         }
         accountService.updateAccount(accountDTO, accountNumber);
-        return ResponseEntity.ok("Cập nhật tài khoản thành công!");
+        return ResponseEntity.ok("Account update successful!");
     }
 
     @GetMapping("/customers")
@@ -91,7 +91,7 @@ public class AccountController {
         if (jwtUtil.isTokenValid(token)) {
             jwtUtil.generateToken(jwtUtil.validateToken(token), "USER", 1);
         }
-        return ResponseEntity.ok("Đăng xuất thành công!");
+        return ResponseEntity.ok("Log out successfully!");
     }
 
     // API lấy lịch sử giao dịch theo user

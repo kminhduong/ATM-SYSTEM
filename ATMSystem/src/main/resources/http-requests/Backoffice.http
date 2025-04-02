@@ -3,10 +3,10 @@ POST http://localhost:8080/accounts/register
 Content-Type: application/json
 
 {
-  "userId": "111111111111",
-  "accountNumber": "11111",
+  "userId": "222222222222",
+  "accountNumber": "33333",
   "fullName": "Nguyễn Văn D",
-  "username": "nguyen123",
+  "username": "nguyen1",
   "phone": "0901234567",
   "email": "sugahong0107@gmail.com",
   "accountType": "SAVINGS",

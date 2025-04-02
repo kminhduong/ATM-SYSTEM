@@ -4,19 +4,18 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "credential")
+@Table(name = "Credential")
 public class Credential {
-
     @Id
     @Column(name = "account_number", length = 50)
     private String accountNumber;
 
     @OneToOne
-    @MapsId // ✅ Chỉ định accountNumber là khóa chính của Credential, lấy từ Account
+    @MapsId
     @JoinColumn(name = "account_number")
     private Account account;
 
-    @Column(name = "pin", length = 6, nullable = false)
+    @Column(name = "pin", length = 255, nullable = false) // Ensure NOT NULL
     private String pin;
 
     @Column(name = "failed_attempts", nullable = false)
