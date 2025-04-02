@@ -38,15 +38,15 @@
                         <td th:text="${customer.phone}"></td>
                         <td th:text="${customer.email}"></td>
                         <td>
-                            <button class="btn btn-info" th:attr="onclick='viewTransactionHistory(' + ${customer.userId} + ')'" >
+                            <button class="btn btn-light" th:attr="onclick='viewTransactionHistory(' + ${customer.userId} + ')'" >
                                 🕐 Lịch sử GD
                             </button>
 
-                            <button class="btn btn-info" th:attr="onclick='viewDepositMoney(' + ${customer.userId} + ')'" >
+                            <button class="btn btn-light" th:attr="onclick='viewDepositMoney(' + ${customer.userId} + ')'" >
                                 💳 Nạp tiền
                             </button>
 
-                            <button class="btn btn-info" th:attr="onclick='viewInfoModal(' + ${customer.userId} + ')'" >
+                            <button class="btn btn-light" th:attr="onclick='viewInfoModal(' + ${customer.userId} + ')'" >
                                 📝 Cập nhật TT
                             </button>
                         </td>
@@ -281,10 +281,6 @@
 
         return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
     }
-
-    // Ví dụ sử dụng
-    const formattedTime = formatDateTime("2025-04-01T16:27:37.000+00:00");
-    console.log(formattedTime); // Output: 16:27:37 01/04/2025
 
 
     function viewDepositMoney(customerId) {

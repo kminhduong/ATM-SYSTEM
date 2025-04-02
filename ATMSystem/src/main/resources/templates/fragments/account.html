@@ -2,7 +2,9 @@
 
     <!-- Page Heading -->
     <h1 class="h3 mb-2 text-gray-800">Tài khoản</h1>
-
+    <button class="btn btn-primary" style="margin-bottom: 1rem" onclick="viewNewAccModal()">
+        Tạo mới
+    </button>
 
     <!-- DataTales Example -->
     <div class="card shadow mb-4">
@@ -18,6 +20,7 @@
                         <th>STK</th>
                         <th>Loại TK</th>
                         <th>Trạng thái</th>
+                        <th>Cập nhật lần cuối</th>
                         <th>Thao tác</th>
                     </tr>
                     </thead>
@@ -26,6 +29,7 @@
                         <th>STK</th>
                         <th>Loại TK</th>
                         <th>Trạng thái</th>
+                        <th>Cập nhật lần cuối</th>
                         <th>Thao tác</th>
                     </tr>
                     </tfoot>
@@ -35,13 +39,14 @@
                         <td th:text="${account.accountNumber}"></td>
                         <td th:text="${account.accountType}"></td>
                         <td th:text="${account.status}"></td>
+                        <td th:text="${account.lastUpdated}"></td>
                         <td>
-                            <button class="btn btn-info" th:attr="onclick='viewTransactionHistory(' + ${account.accountNumber} + ')'" >
-                                Đổi PIN
+                            <button class="btn btn-light" th:attr="onclick='viewPinModal(' + ${account.accountNumber} + ')'" >
+                                🔑 Đổi PIN
                             </button>
 
-                            <button class="btn btn-info" th:attr="onclick='viewAddMoney(' + ${account.accountNumber} + ')'" >
-                                x
+                            <button class="btn btn-light" th:attr="onclick='viewStatusModal(' + ${account.accountNumber} + ')'" >
+                                ✅ Đổi trạng thái
                             </button>
                         </td>
                     </tr>
@@ -54,37 +59,281 @@
 </div>
 
 
-<div class="modal fade" id="transactionModal" tabindex="-1" aria-labelledby="transactionModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="transactionModalLabel">Lịch sử giao dịch</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">Trạng thái tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Danh sách lịch sử giao dịch -->
-                <ul class="list-group">
-                    <li class="list-group-item">Giao dịch 1: $100</li>
-                    <li class="list-group-item">Giao dịch 2: $250</li>
-                    <li class="list-group-item">Giao dịch 3: $300</li>
-                    <li class="list-group-item">Giao dịch 4: $400</li>
-                </ul>
+                <form id="statusForm">
+                    <div class="mb-3">
+                        <label class="form-label">Tài khoản: <span id="pinID"></span></label>
+
+                    </div>
+                    <div class="mb-3">
+                        <label for="accountStatus" class="form-label">Trạng thái mới:</label>
+                        <select name="accountStatus" id="accountStatus" class="form-select">
+                            <option value="ACTIVE">ACTIVE</option>
+                            <option value="CLOSED">CLOSED</option>
+                            <option value="FROZEN">FROZEN</option>
+                            <option value="BLOCKED">BLOCKED</option>
+                            <option value="PENDING">PENDING</option>
+                        </select>
+
+                    </div>
+                </form>
             </div>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="depositButton" onclick="changeStatus()">Đổi</button>
             </div>
+
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="pinModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Trạng thái tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="pinForm">
+                    <div class="mb-3">
+                        <label class="form-label">Tài khoản: <span id="pinID"></span></label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="newPIN" class="form-label">PIN mới</label>
+                        <input type="password" class="form-control" id="newPIN" placeholder="Nhập PIN mới" required>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="changePIN()">Cập nhật </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm tài khoản</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addNewForm">
+                    <!-- Account Number -->
+                    <div class="mb-3">
+                        <label for="accountNumber" class="form-label">Account Number</label>
+                        <input type="text" class="form-control" id="accountNumber" name="accountNumber">
+                    </div>
+                    <!-- Full Name -->
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">Họ tên KH</label>
+                        <input type="text" class="form-control" id="fullName" name="fullName">
+                    </div>
+                    <!-- User ID -->
+                    <div class="mb-3">
+                        <label for="userId" class="form-label">CCCD</label>
+                        <input type="text" class="form-control" id="userId" name="userId">
+                    </div>
+                    <!-- Account Type -->
+                    <div class="mb-3">
+                        <label for="accountType" class="form-label">Account Type</label>
+                        <select class="form-control" id="accountType">
+                            <option value="SAVINGS">Tiết kiệm</option>
+                            <option value="CHECKING">Thanh toán</option>
+                        </select>
+                    </div>
+                    <!-- PIN -->
+                    <div class="mb-3">
+                        <label for="pin" class="form-label">PIN</label>
+                        <input type="password" class="form-control" id="pin" name="pin">
+                    </div>
+                    <!-- Role -->
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <input type="text" class="form-control" id="role" name="role" readonly value="USER">
+                    </div>
+                    <!-- Phone -->
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="phone" name="phone">
+                    </div>
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="addNew()">Tạo </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function viewTransactionHistory(customerId) {
+    const statusModal = new bootstrap.Modal(document.getElementById("statusModal"));
+    const pinModal = new bootstrap.Modal(document.getElementById("pinModal"));
+    const addModal = new bootstrap.Modal(document.getElementById("addModal"));
 
-        alert("Show Transaction modal")
+    function viewPinModal(accID) {
+
+        document.getElementById("pinID").innerHTML = accID
+        pinModal.show()
+
     }
 
-    function viewAddMoney(customerId) {
-
-        alert("Show Add money modal")
+    function viewStatusModal(customerId) {
+        document.getElementById("pinID").innerHTML = customerId
+        statusModal.show()
     }
+
+    function viewNewAccModal() {
+        addModal.show()
+    }
+
+    function formatDateTime(dateTimeString) {
+
+        const date = new Date(dateTimeString);
+
+
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Tháng bắt đầu từ 0
+        const year = date.getFullYear();
+
+
+        return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
+    }
+
+    function addNew(){
+
+        const formData = {
+            accountNumber: document.getElementById('accountNumber').value,
+            fullName: document.getElementById('fullName').value,
+            userId: document.getElementById('userId').value,
+            accountType: document.getElementById('accountType').value,
+            // status: null,
+            // balance: null,
+            pin: document.getElementById('pin').value,
+            role: document.getElementById('role').value,
+            phone: document.getElementById('phone').value,
+            email: document.getElementById('email').value,
+        };
+
+
+        // Kiểm tra dữ liệu hợp lệ
+        const errors = [];
+
+        if (!formData.accountNumber) errors.push("Account Number không được để trống.");
+        if (!formData.fullName) errors.push("Full Name không được để trống.");
+        if (!formData.userId) errors.push("User ID không được để trống.");
+        if (!formData.accountType) errors.push("Account Type không được để trống.");
+        if (!formData.role) errors.push("Role không được để trống.");
+        if (!formData.phone || !/^\d{10,15}$/.test(formData.phone)) errors.push("Phone phải là số từ 10 đến 15 chữ số.");
+        if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) errors.push("Email không hợp lệ.");
+
+        // Nếu có lỗi, hiển thị thông báo và dừng xử lý
+        if (errors.length > 0) {
+            alert("Có lỗi trong dữ liệu:\n" + errors.join("\n"));
+            return;
+        }
+
+
+
+        fetch('/accounts/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+            .then(response => {
+                // Kiểm tra nếu response trả về thành công
+                if (response.ok) {
+                    addModal.hide()
+                    location.reload()
+                    return// Parse response thành JSON
+                } else {
+                    throw new Error('Response không thành công: ' + response.status);
+                }
+            })
+            .catch(error => {
+                console.error('Có lỗi xảy ra:', error);
+                alert('Có lỗi xảy ra!');
+            });
+    }
+
+    function changePIN(){
+
+        const formData = {
+            accountNumber: document.getElementById("pinID").innerHTML,
+            pin: document.getElementById('newPIN').value
+        };
+
+
+        fetch('/accounts/update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+            .then(response => {
+                if (response.ok){
+                    alert("Cập nhật thành công")
+                    document.getElementById('newPIN').value = ""
+                    pinModal.hide()
+                }
+            })
+            .catch(error => {
+                console.error('Có lỗi xảy ra:', error);
+                alert('Có lỗi xảy ra!');
+            });
+    }
+
+    function changeStatus(){
+
+        const formData = {
+            accountNumber: document.getElementById("pinID").innerHTML,
+            status: document.getElementById('accountStatus').value
+        };
+
+
+        fetch('/accounts/update', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+            .then(response => {
+                if (response.ok){
+                    alert("Cập nhật thành công")
+                    pinModal.hide()
+                    location.reload()
+                }
+            })
+            .catch(error => {
+                console.error('Có lỗi xảy ra:', error);
+                alert('Có lỗi xảy ra!');
+            });
+    }
+
 </script>
