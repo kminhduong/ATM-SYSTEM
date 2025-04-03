@@ -15,13 +15,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import com.atm.util.JwtUtil;
 
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TransactionService {
@@ -111,6 +108,7 @@ public class TransactionService {
 
     private ApiResponse<String> handleWithdraw(Account account, double amount) {
         if (amount > account.getBalance()) {
+            logger.warn("Withdrawal failed: Insufficient balance. Account: " + account.getAccountNumber());
             return new ApiResponse<>("Insufficient balance to make transaction", null);
         }
 
@@ -160,8 +158,7 @@ public class TransactionService {
             return new ApiResponse<>("Unable to save transaction to database", null);
         }
 
-        return new ApiResponse<>("Deposit successfully", String.valueOf(account.getBalance()));
-    }
+        return new ApiResponse<>("Deposit successfully", String.format("%.2f", account.getBalance()));    }
 
     private ApiResponse<String> handleTransfer(Account sourceAccount, String targetAccountNumber, double amount) {
         if (amount > sourceAccount.getBalance()) {
@@ -209,39 +206,47 @@ public class TransactionService {
             return new ApiResponse<>("Unable to save transaction to database", null);
         }
 
-        return new ApiResponse<>("Transfer successful", String.valueOf(sourceAccount.getBalance()));
-    }
+        return new ApiResponse<>("Transfer successful", String.format("%.2f", sourceAccount.getBalance()));    }
 
-    public ApiResponse<String> sendOtpForWithdrawal(String accountNumber){
-        // 1. Kiểm tra accountNumber đầu vào
+    // Lưu thông tin tạm thời trong session
+    private Map<String, String> sessionStorage = new HashMap<>();
+
+    public ApiResponse<String> sendOtpForWithdrawal(String accountNumber) {
+        // Kiểm tra accountNumber đầu vào
         if (accountNumber == null || accountNumber.isEmpty()) {
             return new ApiResponse<>("Account number is required.", null);
         }
 
-        // 2. Tìm tài khoản từ cơ sở dữ liệu
+        // Tìm tài khoản từ cơ sở dữ liệu
         Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
         if (accountOpt.isEmpty()) {
             return new ApiResponse<>("No account found with the provided account number", null);
         }
         Account account = accountOpt.get();
 
-        // 3. Tìm số điện thoại từ bảng User
-        Optional<User> userOpt = userRepository.findByUserId(account.getUser().getUserId()); // Liên kết account với userId
+        // Lưu accountNumber vào sessionStorage
+        sessionStorage.put("accountNumber", accountNumber);
+
+        // Tìm số điện thoại từ bảng User
+        Optional<User> userOpt = userRepository.findByUserId(account.getUser().getUserId());
         if (userOpt.isEmpty()) {
             return new ApiResponse<>("No user information found for this account.", null);
         }
         String phoneNumber = userOpt.get().getPhone();
 
-        // 4. Gửi OTP
+        // Gửi OTP
         String generatedOtp = generateAndSendOtp(phoneNumber);
         return new ApiResponse<>("OTP has been sent to your phone number.", generatedOtp);
     }
 
     public ApiResponse<String> processWithdrawWithOtp(WithdrawOtpRequest request) {
-        // Kiểm tra đầu vào
-        if (request.getAccountNumber() == null || request.getAccountNumber().isEmpty()) {
-            return new ApiResponse<>("Account number is required.", null);
+        // Lấy accountNumber từ sessionStorage
+        String accountNumber = sessionStorage.get("accountNumber");
+        if (accountNumber == null || accountNumber.isEmpty()) {
+            return new ApiResponse<>("Account number not found. Please request an OTP first.", null);
         }
+
+        // Kiểm tra đầu vào
         if (request.getOtp() == null || request.getOtp().isEmpty()) {
             return new ApiResponse<>("OTP is required.", null);
         }
@@ -255,7 +260,7 @@ public class TransactionService {
         }
 
         // Lấy tài khoản từ cơ sở dữ liệu
-        Optional<Account> accountOpt = accountRepository.findByAccountNumber(request.getAccountNumber());
+        Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
         if (accountOpt.isEmpty()) {
             return new ApiResponse<>("No account found with the provided account number.", null);
         }
@@ -281,9 +286,9 @@ public class TransactionService {
 
         // Lưu giao dịch
         Transaction transaction = new Transaction(
-                request.getAccountNumber(),
+                accountNumber,
                 request.getAmount(),
-                TransactionType.fromString("WITHDRAWAL_OTP"), // Bảo đảm không phân biệt chữ hoa/thường
+                TransactionType.fromString("WITHDRAWAL_OTP"),
                 new Date()
         );
         transactionRepository.save(transaction);

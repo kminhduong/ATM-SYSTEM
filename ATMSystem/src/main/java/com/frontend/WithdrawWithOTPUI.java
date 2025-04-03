@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -166,29 +167,38 @@ public class WithdrawWithOTPUI extends JFrame {
 
     private boolean sendOTP(String accountNumber) {
         try {
-            // URL of the API
+            // URL của API
             String apiUrl = "http://localhost:8080/api/transactions/send-otp";
 
-            // Create HttpURLConnection
+            // Tạo HttpURLConnection
             URL url = new URL(apiUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json; utf-8");
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setDoOutput(true); // Để cho phép ghi dữ liệu vào kết nối
 
             // JSON payload
             String jsonPayload = String.format("{\"accountNumber\": \"%s\"}", accountNumber);
 
-            // Send request
+            // Ghi payload vào request body
             try (OutputStream os = connection.getOutputStream()) {
                 byte[] input = jsonPayload.getBytes("utf-8");
                 os.write(input, 0, input.length);
             }
 
-            // Check response code
+            // Đọc mã phản hồi từ API
             int responseCode = connection.getResponseCode();
-            return responseCode == HttpURLConnection.HTTP_OK;
-        } catch (Exception e) {
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                System.out.println("OTP sent successfully!");
+                return true;
+            } else {
+                System.err.println("Failed to send OTP. HTTP response code: " + responseCode);
+                return false;
+            }
+        } catch (IOException e) {
+            // Log lỗi để dễ dàng debug
+            System.err.println("Error while sending OTP: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

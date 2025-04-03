@@ -22,15 +22,6 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-//    public String generateToken(String accountNumber, String role, long expirationTime) {
-//        return Jwts.builder()
-//                .setSubject(accountNumber)
-//                .claim("role", role)
-//                .setIssuedAt(new Date())
-//                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
-//                .signWith(getSecretKey(), SignatureAlgorithm.HS256)
-//                .compact();
-//    }
     public String generateToken(String accountNumber, String role, long expirationTime) {
         System.out.println("🔍 Role from DB before creating JWT: " + role);
 
@@ -45,7 +36,6 @@ public class JwtUtil {
         System.out.println("🔐 Token đã tạo: " + token);
         return token;
     }
-
 
     public String validateToken(String token) {
         try {
@@ -86,5 +76,19 @@ public class JwtUtil {
         String role = (roleObj != null) ? roleObj.toString() : null;
         System.out.println("🔍 Vai trò lấy từ JWT (fix): " + role);
         return role;
+    }
+
+    public String generateTransactionToken(String accountNumber, String role, double amount, String otp, long expirationTime) {
+        // Tạo token với các thông tin giao dịch
+        return Jwts.builder()
+                .setSubject(accountNumber)
+                .claim("role", role)
+                .claim("amount", amount)
+                .claim("otp", otp)
+                .claim("type", "WITHDRAWAL") // Loại giao dịch
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime)) // Thời gian hết hạn
+                .signWith(getSecretKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 }
