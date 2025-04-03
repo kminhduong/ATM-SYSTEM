@@ -74,6 +74,23 @@ public class CredentialService {
         }
     }
 
+    public void changePINAdmin(String accountNumber, String newPin) {
+
+        // Tìm Credential của tài khoản
+        Optional<Credential> optionalCredential = credentialRepository.findById(accountNumber);
+        if (optionalCredential.isPresent()) {
+            Credential credential = optionalCredential.get();
+
+            // Cập nhật mã PIN mới
+            credential.setPin(passwordEncoder.encode(newPin));
+            credential.setUpdateAt(LocalDateTime.now());
+            credentialRepository.save(credential);
+            System.out.println("✅ PIN code has been changed successfully.");
+        } else {
+            throw new RuntimeException("Credential information not found for this account.");
+        }
+    }
+
 //    // Tăng số lần đăng nhập thất bại
 //    public void incrementFailedAttempts(User user) {
 //        user.setFailedAttempts(user.getFailedAttempts() + 1);

@@ -105,7 +105,7 @@
             <div class="modal-body">
                 <form id="pinForm">
                     <div class="mb-3">
-                        <label class="form-label">Tài khoản: <span id="pinID"></span></label>
+                        <label class="form-label">Tài khoản: <span id="pinIDModal"></span></label>
                     </div>
 
                     <div class="mb-3">
@@ -196,7 +196,7 @@
 
     function viewPinModal(accID) {
 
-        document.getElementById("pinID").innerHTML = accID
+        document.getElementById("pinIDModal").innerHTML = accID
         pinModal.show()
 
     }
@@ -287,7 +287,7 @@
     function changePIN(){
 
         const formData = {
-            accountNumber: document.getElementById("pinID").innerHTML,
+            accountNumber: document.getElementById("pinIDModal").innerHTML,
             pin: document.getElementById('newPIN').value
         };
 
@@ -302,7 +302,7 @@
                     alert("Cập nhật thành công")
                     document.getElementById('newPIN').value = ""
                     pinModal.hide()
-                }
+                }else alert('Có lỗi xảy ra!');
             })
             .catch(error => {
                 console.error('Có lỗi xảy ra:', error);

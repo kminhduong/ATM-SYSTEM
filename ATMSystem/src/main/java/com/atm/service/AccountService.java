@@ -117,25 +117,24 @@ public class AccountService {
         Account account = optionalAccount.get();
 
         // Kiểm tra quyền thay đổi thông tin
-        checkUpdatePermission(accountNumber, accountDTO, false);
+        //checkUpdatePermission(accountNumber, accountDTO, false);
 
         // Cập nhật thông tin tài khoản
         updateAccountDetails(account, accountDTO);
 
         // Nếu cập nhật số dư
         if (accountDTO.getBalance() != null) {
-            checkUpdatePermission(accountNumber, accountDTO, true);
+            //checkUpdatePermission(accountNumber, accountDTO, true);
             balanceService.updateBalance(accountDTO, account, TransactionType.DEPOSIT);
         }
 
         // Cập nhật thông tin bảo mật (Credential)
-//        if (accountDTO.getPin() != null) {
-//            credentialService.changePIN(
-//                    changePinRequest.getAccountNumber(),
-//                    changePinRequest.getOldPin(),
-//                    changePinRequest.getNewPin()
-//            );
-//        }
+        if (accountDTO.getPin() != null) {
+            credentialService.changePINAdmin(
+                    accountDTO.getAccountNumber(),
+                    accountDTO.getPin()
+            );
+        }
 
         // Cập nhật thông tin người dùng
         if (account.getUser() != null) {
@@ -170,6 +169,11 @@ public class AccountService {
         if (accountDTO.getRole() != null && !accountDTO.getRole().isEmpty()) {
             account.setRole(accountDTO.getRole());
         }
+
+        if (accountDTO.getStatus() != null) {
+            account.setStatus(accountDTO.getStatus());
+        }
+
     }
 
     // Lấy tất cả khách hàng (dành cho nhân viên ngân hàng)
